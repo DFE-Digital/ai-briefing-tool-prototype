@@ -1,0 +1,37 @@
+﻿@page
+@using Microsoft.AspNetCore.Html
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+
+    const string academyName = nameof(Model.AcademyName);
+    
+    var ResultHtml = new HtmlString(@Model.Result);
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third">
+        <form method="post">
+            <govuk-input name="@academyName" spellcheck="false">
+                <govuk-input-label is-page-heading="false" class="govuk-label--m">Academy name</govuk-input-label>
+            </govuk-input>
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+    <div class="govuk-grid-column-two-thirds">
+@*         <button onclick="copyText()">Copy</button>
+        <p class="govuk-body" id="tokensUsed">@Model.TotalTokens</p> *@
+        <div class="govuk-body" id="textToCopy">@ResultHtml</div>
+    </div>
+</div>
+
+<script>
+    function copyText() {
+        const text = document.getElementById("textToCopy").value;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied: " + text);
+        }).catch(err => {
+            console.error("Failed to copy: ", err);
+        });
+    }
+</script>

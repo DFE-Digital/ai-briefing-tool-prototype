@@ -1,0 +1,64 @@
+﻿@{
+    var projectTitle = "Drafting tool";
+    var inputTitle = ViewData["Title"];
+    var title = inputTitle?.ToString() != null && string.IsNullOrEmpty(inputTitle.ToString()) ? $"{inputTitle} - {projectTitle}" : projectTitle;
+}
+
+<!DOCTYPE html>
+<html class="govuk-template" lang="en">
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0c0c">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="/dist/assets/images/favicon.ico" type="image/x-icon">
+    <link rel="mask-icon" href="/dist/assets/images/govuk-mask-icon.svg" color="#0b0c0c">
+    <link rel="apple-touch-icon" sizes="180x180" href="/dist/assets/images/govuk-apple-touch-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/dist/assets/images/govuk-apple-touch-icon-167x167.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/dist/assets/images/govuk-apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" href="/dist/assets/images/govuk-apple-touch-icon.png">
+
+    <title>@title</title>
+    <link rel="stylesheet" href="~/dist/site.css" />
+    <link rel="stylesheet" href="~/dist/accessible-autocomplete.min.css" asp-add-nonce />
+</head>
+<body class="govuk-template__body">
+
+    <script asp-add-nonce>
+        document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');
+    </script>
+
+    <script src="~/dist/jquery.min.js" asp-add-nonce></script>
+
+
+    <a href="#main-content" class="govuk-skip-link">Skip to main content</a>
+
+    @await Html.PartialAsync("_Header")
+
+    @await RenderSectionAsync("AfterHeader", required: false)
+
+    @await RenderSectionAsync("BeforeMainFullWidth", required: false)
+
+    <div class="dfe-width-container">
+        @await RenderSectionAsync("BeforeMain", required: false)
+    </div>
+
+    <div class="dfe-width-container govuk-main-wrapper">
+        <main id="main-content" role="main" class="dfe-width-container">
+            <div class="govuk-grid-row">
+                <div class="govuk-grid-column-full">
+                    @RenderBody()
+                </div>
+            </div>
+        </main>
+    </div>
+    <partial name="_Footer" />
+    <script src="~/dist/accessible-autocomplete.min.js" asp-add-nonce></script>
+    <script src="~/dist/site.js" asp-add-nonce></script>
+    <script src="~/dist/dfefrontend.min.js" asp-add-nonce></script>
+</body>
+</html>

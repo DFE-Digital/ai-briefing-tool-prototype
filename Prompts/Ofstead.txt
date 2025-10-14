@@ -1,0 +1,1 @@
+Create a section called "Ofsted ratings" and add the three most recently available year's worth of ratings as listed items. If less than 3 years' worth of data is available, include data for the years that are. Where no data is available, say "No data is available.". Where it is available, cite and link to the source at the bottom of its section.

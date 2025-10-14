@@ -1,0 +1,181 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+@import "inter-ui/inter.css";
+
+// override the default page width
+$govuk-page-width: 1200px;
+$moj-page-width: $govuk-page-width;
+
+// get the Inter font
+
+// Use the DfE font 'Inter', do not user GDS Transport
+$govuk-font-family: "Inter", blinkmacsystemfont, "Segoe UI", roboto,
+oxygen-sans, ubuntu, cantarell, "Helvetica Neue", sans-serif;
+$govuk-assets-path: "/node_modules/govuk-frontend/govuk/assets/";
+
+@import "node_modules/dfe-frontend/packages/dfefrontend";
+@import "node_modules/govuk-frontend/govuk/all";
+@import "node_modules/@ministryofjustice/frontend/moj/all.scss";
+@import "./css/attachment.scss";
+@import "./css/related-items.scss";
+@import "./css/summary-card.scss";
+@import "./css/task-list.scss";
+@import "./css/cookie-banner.scss";
+@import "./css/date-range.scss";
+@import "./css/risk.scss";
+@import "./css/project-overview.scss";
+@import "./css/pupil-numbers.scss";
+@import "./css/pagination.scss";
+
+.moj-sub-navigation__link {
+	font-weight: bold;
+}
+
+.app-align-right {
+  text-align: right;
+}
+
+.autocomplete__option {
+	font-family: "Inter", Arial, sans-serif !important;
+	font-weight: 400;
+}
+
+.app-\!-width-one-fifth {
+	width: 100% !important;
+	@include govuk-media-query($from: tablet) {
+		width: 20% !important;
+	}
+}
+
+.app-\!-width-two-fifths {
+	width: 100% !important;
+	@include govuk-media-query($from: tablet) {
+		width: 40% !important;
+	}
+}
+
+.app-\!-width-three-fifths {
+	width: 100% !important;
+	@include govuk-media-query($from: tablet) {
+		width: 60% !important;
+	}
+}
+
+.app-\!-width-four-fifths {
+	width: 100% !important;
+	@include govuk-media-query($from: tablet) {
+		width: 80% !important;
+	}
+}
+
+/* Prepare Styling */
+
+.prepare-text-align-right {
+	text-align: right !important;
+}
+
+.prepare-project-listing__filters-container {
+	margin-bottom: 0;
+}
+
+.prepare-project-listing__filters-details {
+	background-color: #f3f2f1;
+	padding: 1rem;
+	clear: both;
+	margin-bottom: 2em;
+	border-left: 0;
+}
+
+.prepare-project-listing__fitlers-details-summary:before {
+	content: none;
+}
+
+.prepare-project-listing__fitlers-details-summary {
+	padding-left: 0;
+	margin-top: 1em;
+}
+
+.prepare-project-listing__button--main {
+	margin-bottom: 1em;
+	text-decoration: none;
+}
+
+.prepare-project-listing__filter {
+	background-color: govuk-colour("white");
+	overflow-y: auto;
+	height: 200px;
+}
+
+.prepare-project-listing__conditional {
+	border: 0;
+	margin-left: 0 !important;
+	margin-bottom: 0 !important;
+	padding-left: 0 !important;
+}
+
+.prepare-project-listing__button--apply {
+	background-color: govuk-colour("black");
+	color: govuk-colour("white");
+}
+
+.prepare-project-listing__button--apply:hover {
+	background-color: govuk-colour("light-grey");
+}
+
+.govuk-prototype-kit-common-templates-related-items {
+    border-top: 2px solid govuk-colour("blue");
+    padding-top: govuk-spacing(2);
+}
+
+.govuk-prototype-kit-common-templates-related-items .govuk-list > li {
+    margin-bottom: govuk-spacing(2);
+}
+
+// Override default font from DfE Frontend styles
+html {
+	font-family: "Inter", blinkmacsystemfont, "Segoe UI", roboto, oxygen-sans, ubuntu, cantarell, "Helvetica Neue", sans-serif;
+}
+
+.environment-banner {
+	&.govuk-tag {
+		display: block;
+		padding-left: calc((100vw - #{$govuk-page-width}) / 2);
+
+		@include govuk-media-query($until: $govuk-page-width + $govuk-gutter * 2) {
+			padding-left: $govuk-gutter;
+		}
+
+		@include govuk-media-query($until: tablet) {
+			padding-left: $govuk-gutter-half;
+		}
+	}
+}
+
+// Stop the service banner from wrapping
+p.govuk-phase-banner__content {
+	max-width: 100%;
+}
+
+.list-style-none {
+	list-style: none;
+	padding-left: 0;
+}
+
+// MOJ header navigtion
+// We want persitently acitve navigation items
+.moj-header__navigation-link[aria-current] {
+	color: govuk-colour("blue");
+}
+
+// Undo the changes the the DfE styles do to the MOJ styles
+.moj-sub-navigation__item {
+	margin-bottom: 0px;
+}
+
+// force skip link to be underline
+.govuk-skip-link { text-decoration: underline !important; }
+
+// force header and DfE navigation links to always be white
+a.dfe-header__link--service, a.dfe-header__navigation-link {
+	color: #ffffff;
+}

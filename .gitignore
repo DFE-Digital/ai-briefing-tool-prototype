@@ -1,0 +1,83 @@
+# Ignore build output
+bin/
+obj/
+BuildOutput/
+TestResults/
+CoverageReport/
+
+# User-specific files
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE-specific files
+.vscode/
+.idea/
+*.code-workspace
+
+# Rider-specific files
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Environment variables
+.env
+.env.*
+
+# Visual Studio-specific
+.vs/
+
+# ASP.NET Razor-specific
+wwwroot/**/node_modules/
+wwwroot/**/dist/
+
+# Node.js dependencies
+Node/node_modules/
+Node/dist/
+
+# Node.js Tools for Visual Studio
+node_modules/
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+
+# System-specific files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Configuration
+secrets.json
+
+# Other
+*.bak
+*.old
+*.orig
+*.rej
+*.swp
+*.lock
+
+## Terraform
+.terraformrc*
+terraform.rc*
+*.tfstate*
+*.tfvars*
+!terraform.tfvars.example
+.terraform/
+backend.vars
+
+## Dependencies
+/Brewfile.lock.json
+/terraform/Brewfile.lock.json
+
+# govuk frontend stuff
+src/Dfe.ManageSchoolImprovement/wwwroot/assets
+src/Dfe.ManageSchoolImprovement/wwwroot/dist
