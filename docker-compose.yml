@@ -1,0 +1,14 @@
+services:
+  web:
+    container_name: BriefingTool.Web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/bash -c "./docker-entrypoint.sh dotnet BriefingTool.dll"
+    ports:
+      - 80:80/tcp
+    networks:
+      - dev
+
+networks:
+  dev:

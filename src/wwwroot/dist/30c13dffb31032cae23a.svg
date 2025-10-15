@@ -1,0 +1,1 @@
+export default __webpack_public_path__ + "/dist/assets/images/icon-arrow-black-down.svg";
