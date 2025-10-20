@@ -12,8 +12,9 @@ builder.Services.AddScoped<IBasePromptRetriever, BasePromptRetriever>();
 builder.Services.AddScoped<IConcernsPromptRetriever, ConcernsPromptRetriever>();
 
 builder.Services.AddScoped<IAcademyInformationRetriever, AcademyInformationRetriever>();
+builder.Services.AddScoped<IOfstedPromptRetriever, OfstedPromptRetriever>();
+builder.Services.AddScoped<IOfstedSummaryPromptRetriever, OfstedSummaryPromptRetriever>();
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
-
 
 var app = builder.Build();
 

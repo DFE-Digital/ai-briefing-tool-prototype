@@ -17,21 +17,21 @@ RUN npm ci --ignore-scripts && npm run build
 FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-azurelinux3.0 AS build
 WORKDIR /build
 
-# Copy solution and props files
-COPY ./src/BriefingTool.sln ./src/
-
 ## START: Restore Packages
 ARG PROJECT_NAME="BriefingTool"
-# Copy csproj files for restore caching
-COPY ./src/${PROJECT_NAME}.csproj                         ./src/
 
-# Mount GitHub Token and restore
- RUN dotnet restore ./src/${PROJECT_NAME}.sln
-## END: Restore Packages
+# # Mount GitHub Token and restore
+#  RUN dotnet restore ./src/${PROJECT_NAME}.sln
+# ## END: Restore Packages
 
 COPY ./src/ /build/src/
 # Build and publish
-RUN dotnet build ./src/${PROJECT_NAME}.sln -c Release
+
+# Build and publish
+WORKDIR /build/src/
+RUN dotnet build -c Release && \
+    dotnet publish --no-build -c Release -o /app
+
 
 # Copy entrypoint script
 COPY ./scripts/docker-entrypoint.sh /app/docker-entrypoint.sh

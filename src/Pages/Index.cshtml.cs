@@ -20,17 +20,44 @@ namespace BriefingTool.Pages
         IBasePromptRetriever basePromptRetriever,
         IConcernsPromptRetriever concernsPromptRetriever,
         IAcademyInformationRetriever academyInformationRetriever,
+        IOfstedPromptRetriever ofstedPromptRetriever,
+        IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever,
         IConcernsInformationRetriever concernsInformationRetriever) : PageModel
     {
         [BindProperty]
-        [Required(ErrorMessage = "State if the conversion is due to 2RI. Choose yes or no")]
-        [Display(Name = "Result")]
+        [Required(ErrorMessage = "Enter an academy name")]
+        [Display(Name = "AcademyName")]
         public string? AcademyName { get; set; }
 
         [BindProperty]
-        [Required(ErrorMessage = "State if the conversion is due to 2RI. Choose yes or no")]
         [Display(Name = "Result")]
         public string? Result { get; set; }
+
+        [BindProperty]
+        [Display(Name = "Ofsted")]
+        public bool Ofsted { get; set; }
+
+        [BindProperty]
+        [Display(Name = "Concerns")]
+        public bool Concerns { get; set; }
+
+        [BindProperty]
+        [Display(Name = "Financial")]
+        public bool Financial { get; set; }
+
+        [BindProperty]
+        [Display(Name = "Additional prompt information")]
+        public string? AdditionalPrompt { get; set; }
+
+        [BindProperty]
+        [Display(Name = "Debug")]
+        public bool DebugOutput { get; set; }
+
+        [BindProperty]
+        [Display(Name = "Debug information about prompt")]
+        public string? DebugPrompt { get; set; }
+
+
 
         public int? TotalTokens { get; set; }
 
@@ -41,33 +68,36 @@ namespace BriefingTool.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
-            //Result = basePromptRetriever.GetBasePrompt();
-            Result = await RunAsync();
+            var output = await RunAsync();
+            Result = output.output;
+            DebugPrompt = output.debug;
 
             return Page();
         }
 
-        public async Task<string> RunAsync()
+        public record AIResult(string output, string debug);
+
+        public async Task<AIResult> RunAsync()
         {
             // Retrieve the OpenAI endpoint from environment variables
             var endpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? "https://uc021-openai-sandbox-uks.openai.azure.com/";
             if (string.IsNullOrEmpty(endpoint))
             {
 
-                return "Please set the AZURE_OPENAI_ENDPOINT environment variable.";
+                return new AIResult("", "Please set the AZURE_OPENAI_ENDPOINT environment variable.");
             }
 
             var key = configuration["AZURE_OPENAI_KEY"];
             if (string.IsNullOrEmpty(key))
             {
 
-                return "Please set the AZURE_OPENAI_KEY environment variable.";
+                return new AIResult("", "Please set the AZURE_OPENAI_KEY environment variable.");
             }
 
             if (string.IsNullOrEmpty(AcademyName))
             {
 
-                return "Enter an academy name";
+                return new AIResult("", "Enter an academy name");
             }
 
             AzureKeyCredential credential = new AzureKeyCredential(key);
@@ -84,17 +114,32 @@ namespace BriefingTool.Pages
 
             var jsonAcademyData = JsonSerializer.Serialize(academyData);
 
-            // List of messages to send
-            var messages = new List<ChatMessage>
-            {
-                new SystemChatMessage(basePromptRetriever.GetPrompt()),
-                new SystemChatMessage(@$"Here is ofsted inspection data associated with {AcademyName} in JSON format: {jsonAcademyData}"),
-                new SystemChatMessage(concernsPromptRetriever.GetPrompt()),
-                new SystemChatMessage(@$"Here are concerns related to the trust for this academy in the last 3 years associated with {AcademyName}: {concernsData}"),
-                new UserChatMessage(@$"Create a briefing for {AcademyName}"),
-                new AssistantChatMessage(@""),
-            };
+            var promptBuilder = new PromptBuilder();
+            
+            promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
 
+            if (Ofsted)
+            {
+                promptBuilder.AddSystemMessage(ofstedPromptRetriever.GetPrompt());
+                promptBuilder.AddSystemMessage(ofstedSummaryPromptRetriever.GetPrompt());
+                promptBuilder.AddSystemMessage(@$"Here is ofsted inspection data associated with {AcademyName} in JSON format: {jsonAcademyData}");
+            }
+
+            // List of messages to send
+            if (Concerns)
+            {
+                promptBuilder.AddSystemMessage(concernsPromptRetriever.GetPrompt());
+                promptBuilder.AddSystemMessage(
+                    @$"Here are concerns related to the trust for this academy in the last 3 years associated with {AcademyName}: {concernsData}");
+            }
+
+            promptBuilder.AddUserMessage(@$"Create a briefing for {AcademyName}");
+
+            if (!string.IsNullOrWhiteSpace(AdditionalPrompt))
+            {
+                promptBuilder.AddUserMessage(AdditionalPrompt);
+            }
+            
             // Create chat completion options
 
             var options = new ChatCompletionOptions
@@ -111,7 +156,7 @@ namespace BriefingTool.Pages
             {
                 TotalTokens = 0;
                 // Create the chat completion request
-                ChatCompletion completion = await chatClient.CompleteChatAsync(messages, options);
+                ChatCompletion completion = await chatClient.CompleteChatAsync(promptBuilder.GetMessages(), options);
 
                 var chatResult = new StringBuilder();
 
@@ -126,16 +171,14 @@ namespace BriefingTool.Pages
                         chatResult.Append(html);
                     }
 
-                    return chatResult.ToString();
+                    return new AIResult(chatResult.ToString(), promptBuilder.GetPrompt());
                 }
-                else
-                {
-                    return "No response received.";
-                }
+
+                return new AIResult("", "No response received.");
             }
             catch (Exception ex)
             {
-                return $"An error occurred: {ex.Message}";
+                return new AIResult("", $"An error occurred: {ex.Message}");
             }
         }
     }
