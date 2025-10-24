@@ -10,6 +10,7 @@ using OpenAI.Chat;
 
 using static System.Environment;
 using Markdig;
+using System.Text.RegularExpressions;
 
 
 namespace BriefingTool.Pages
@@ -57,7 +58,8 @@ namespace BriefingTool.Pages
         [Display(Name = "Debug information about prompt")]
         public string? DebugPrompt { get; set; }
 
-
+        [BindProperty]
+        public IFormFile? UploadFile { get; set; }
 
         public int? TotalTokens { get; set; }
 
@@ -71,6 +73,13 @@ namespace BriefingTool.Pages
             var output = await RunAsync();
             Result = output.output;
             DebugPrompt = output.debug;
+
+            //await using var stream = UploadFile.OpenReadStream();
+
+            //var filecontents = WordToHtmlConverter.ConvertDocxToHtml(stream);
+            //Result = Markdown.ToHtml(filecontents);
+
+            // Call your converter class from earlier
 
             return Page();
         }
@@ -133,6 +142,13 @@ namespace BriefingTool.Pages
                     @$"Here are concerns related to the trust for this academy in the last 3 years associated with {AcademyName}: {concernsData}");
             }
 
+            if (UploadFile != null)
+            {
+                var fileContents = await ConvertFile(UploadFile);
+
+                promptBuilder.AddSystemMessage($"Here is the contents of the template which was originally docx file but I have converted html format that needs to be filled: {fileContents}");
+            }
+
             promptBuilder.AddUserMessage(@$"Create a briefing for {AcademyName}");
 
             if (!string.IsNullOrWhiteSpace(AdditionalPrompt))
@@ -151,7 +167,7 @@ namespace BriefingTool.Pages
                 FrequencyPenalty = (float)0,
                 PresencePenalty = (float)0
             };
-
+            
             try
             {
                 TotalTokens = 0;
@@ -180,6 +196,20 @@ namespace BriefingTool.Pages
             {
                 return new AIResult("", $"An error occurred: {ex.Message}");
             }
+        }
+
+        private async Task<string> ConvertFile(IFormFile uploadFile)
+        {
+            await using var stream = uploadFile.OpenReadStream();
+
+            var filecontents = WordToHtmlConverter.ConvertDocxToHtml(stream);
+
+            filecontents = Regex.Replace(filecontents, "<style.*?>.*?</style>", "", RegexOptions.Singleline);
+
+            filecontents = Regex.Replace(filecontents, "style=['\"].*?['\"]", "", RegexOptions.IgnoreCase);
+
+            filecontents = Regex.Replace(filecontents, "class=['\"].*?['\"]", "", RegexOptions.IgnoreCase);
+            return filecontents;
         }
     }
 }

@@ -12,13 +12,14 @@
 
 
     const string concerns = nameof(Model.Concerns);
-    
+    const string uploadfile = nameof(Model.UploadFile);
+
     var ResultHtml = new HtmlString(@Model.Result);
 }
 
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-one-third">
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             <govuk-input name="@academyName" for="@Model.AcademyName" spellcheck="false">
                 <govuk-input-label is-page-heading="false" class="govuk-label--m">School or trust name</govuk-input-label>
             </govuk-input>
@@ -46,6 +47,13 @@
                     You can add more details about the briefing you want to be created
                 </govuk-textarea-hint>
             </govuk-textarea>
+            <label class="govuk-label govuk-label--m">
+                Base my content on an existing template
+            </label>
+            <govuk-file-upload name="uploadfile" javascript="true">
+                <govuk-file-upload-label>By uploading an empty brief, submission or report template, this tool can try to create the content you usually include.</govuk-file-upload-label>
+                <govuk-file-upload-hint>Templates must be in Word document format</govuk-file-upload-hint>
+            </govuk-file-upload>
             <govuk-button type="submit">Continue</govuk-button>
         </form>
     </div>
