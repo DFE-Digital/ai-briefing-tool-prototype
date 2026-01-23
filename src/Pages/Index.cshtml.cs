@@ -1,29 +1,27 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.Json;
 using Azure;
 using Azure.AI.OpenAI;
+using Azure.AI.OpenAI.Chat;
+using BriefingTool.Config;
 using BriefingTool.Services;
-using OpenAI.Chat;
-
-using static System.Environment;
 using Markdig;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Options;
+using OpenAI.Chat;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 
 namespace BriefingTool.Pages
 {
+    [Authorize]
     public class IndexModel(
         ILogger<IndexModel> logger,
-        IConfiguration configuration,
-        IBasePromptRetriever basePromptRetriever,
-        IConcernsPromptRetriever concernsPromptRetriever,
-        IAcademyInformationRetriever academyInformationRetriever,
-        IOfstedPromptRetriever ofstedPromptRetriever,
-        IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever,
-        IConcernsInformationRetriever concernsInformationRetriever) : PageModel
+        IBriefingRunner runner ) : PageModel
     {
         [BindProperty]
         [Required(ErrorMessage = "Enter an academy name")]
@@ -58,145 +56,47 @@ namespace BriefingTool.Pages
         [Display(Name = "Debug information about prompt")]
         public string? DebugPrompt { get; set; }
 
-        [BindProperty]
-        public IFormFile? UploadFile { get; set; }
+        [BindProperty] public IFormFile? UploadFile { get; set; }
 
         public int? TotalTokens { get; set; }
+
+
 
         public void OnGet()
         {
 
         }
 
+        [Experimental("AOAI001")]
         public async Task<IActionResult> OnPostAsync()
         {
-            var output = await RunAsync();
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
+            string? fileContents = null;
+
+            if (UploadFile != null)
+            {
+                fileContents = await ConvertFile(UploadFile);
+            }
+
+            var output = await runner.GetBriefing(new BriefingParameters
+            (
+                AcademyName ?? "",
+                Ofsted,
+                Concerns,
+                Financial,
+                AdditionalPrompt,
+                fileContents
+            ));
             Result = output.output;
             DebugPrompt = output.debug;
-
-            //await using var stream = UploadFile.OpenReadStream();
-
-            //var filecontents = WordToHtmlConverter.ConvertDocxToHtml(stream);
-            //Result = Markdown.ToHtml(filecontents);
-
-            // Call your converter class from earlier
 
             return Page();
         }
 
-        public record AIResult(string output, string debug);
-
-        public async Task<AIResult> RunAsync()
-        {
-            // Retrieve the OpenAI endpoint from environment variables
-            var endpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? "https://uc021-openai-sandbox-uks.openai.azure.com/";
-            if (string.IsNullOrEmpty(endpoint))
-            {
-
-                return new AIResult("", "Please set the AZURE_OPENAI_ENDPOINT environment variable.");
-            }
-
-            var key = configuration["AZURE_OPENAI_KEY"];
-            if (string.IsNullOrEmpty(key))
-            {
-
-                return new AIResult("", "Please set the AZURE_OPENAI_KEY environment variable.");
-            }
-
-            if (string.IsNullOrEmpty(AcademyName))
-            {
-
-                return new AIResult("", "Enter an academy name");
-            }
-
-            AzureKeyCredential credential = new AzureKeyCredential(key);
-
-            // Initialize the AzureOpenAIClient
-            AzureOpenAIClient azureClient = new(new Uri(endpoint), credential);
-
-            // Initialize the ChatClient with the specified deployment name
-            ChatClient chatClient = azureClient.GetChatClient("UC021-gpt-4o");
-
-            var academyData = academyInformationRetriever.GetAcademyInformation(AcademyName);
-
-            var concernsData = concernsInformationRetriever.GetTrustConcerns();
-
-            var jsonAcademyData = JsonSerializer.Serialize(academyData);
-
-            var promptBuilder = new PromptBuilder();
-            
-            promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
-
-            if (Ofsted)
-            {
-                promptBuilder.AddSystemMessage(ofstedPromptRetriever.GetPrompt());
-                promptBuilder.AddSystemMessage(ofstedSummaryPromptRetriever.GetPrompt());
-                promptBuilder.AddSystemMessage(@$"Here is ofsted inspection data associated with {AcademyName} in JSON format: {jsonAcademyData}");
-            }
-
-            // List of messages to send
-            if (Concerns)
-            {
-                promptBuilder.AddSystemMessage(concernsPromptRetriever.GetPrompt());
-                promptBuilder.AddSystemMessage(
-                    @$"Here are concerns related to the trust for this academy in the last 3 years associated with {AcademyName}: {concernsData}");
-            }
-
-            if (UploadFile != null)
-            {
-                var fileContents = await ConvertFile(UploadFile);
-
-                promptBuilder.AddSystemMessage($"Here is the contents of the template which was originally docx file but I have converted html format that needs to be filled: {fileContents}");
-            }
-
-            promptBuilder.AddUserMessage(@$"Create a briefing for {AcademyName}");
-
-            if (!string.IsNullOrWhiteSpace(AdditionalPrompt))
-            {
-                promptBuilder.AddUserMessage(AdditionalPrompt);
-            }
-            
-            // Create chat completion options
-
-            var options = new ChatCompletionOptions
-            {
-                Temperature = (float)0.7,
-                MaxOutputTokenCount = 6553,
-
-                TopP = (float)0.95,
-                FrequencyPenalty = (float)0,
-                PresencePenalty = (float)0
-            };
-            
-            try
-            {
-                TotalTokens = 0;
-                // Create the chat completion request
-                ChatCompletion completion = await chatClient.CompleteChatAsync(promptBuilder.GetMessages(), options);
-
-                var chatResult = new StringBuilder();
-
-                // Print the response
-                if (completion != null)
-                {
-                    foreach (var content in completion.Content)
-                    {
-                        TotalTokens += completion.Usage.TotalTokenCount;
-                        string html = Markdown.ToHtml(content.Text);
-
-                        chatResult.Append(html);
-                    }
-
-                    return new AIResult(chatResult.ToString(), promptBuilder.GetPrompt());
-                }
-
-                return new AIResult("", "No response received.");
-            }
-            catch (Exception ex)
-            {
-                return new AIResult("", $"An error occurred: {ex.Message}");
-            }
-        }
 
         private async Task<string> ConvertFile(IFormFile uploadFile)
         {

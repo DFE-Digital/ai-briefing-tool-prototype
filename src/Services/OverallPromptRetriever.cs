@@ -2,5 +2,5 @@
 {
     public interface IOverallPromptRetriever : IPromptRetriever;
 
-    public class OverallPromptRetriever() : FileLoadRetriever("\\Prompts\\OverallSummary.txt"), IOverallPromptRetriever;
+    public class OverallPromptRetriever() : FileLoadRetriever(Path.Combine("Prompts", "OverallSummary.txt")), IOverallPromptRetriever;
 }

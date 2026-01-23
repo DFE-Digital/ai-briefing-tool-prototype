@@ -2,9 +2,9 @@
 {
     public interface IOfstedPromptRetriever : IPromptRetriever;
 
-    public class OfstedPromptRetriever() : FileLoadRetriever("\\Prompts\\Ofsted.txt"), IOfstedPromptRetriever;
+    public class OfstedPromptRetriever() : FileLoadRetriever(Path.Combine("Prompts", "Ofsted.txt")), IOfstedPromptRetriever;
 
     public interface IOfstedSummaryPromptRetriever : IPromptRetriever;
 
-    public class OfstedSummaryPromptRetriever() : FileLoadRetriever("\\Prompts\\OfstedSummary.txt"), IOfstedSummaryPromptRetriever;
+    public class OfstedSummaryPromptRetriever() : FileLoadRetriever(Path.Combine("Prompts", "OfstedSummary.txt")), IOfstedSummaryPromptRetriever;
 }

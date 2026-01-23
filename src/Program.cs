@@ -1,5 +1,8 @@
+using BriefingTool.Config;
 using BriefingTool.Services;
+using DfE.FindInformationAcademiesTrusts.Setup;
 using GovUk.Frontend.AspNetCore;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +18,20 @@ builder.Services.AddScoped<IAcademyInformationRetriever, AcademyInformationRetri
 builder.Services.AddScoped<IOfstedPromptRetriever, OfstedPromptRetriever>();
 builder.Services.AddScoped<IOfstedSummaryPromptRetriever, OfstedSummaryPromptRetriever>();
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
+builder.Services.AddScoped<IOfstedIndexer, OfstedIndexer>();
+builder.Services.AddScoped<IBriefingRunner, BriefingRunner>();
+
+SecurityServicesSetup.AddSecurityServices(builder);
+
+builder.Services.Configure<AzureSettings>(
+    builder.Configuration.GetSection("AzureSettings"));
 
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto
+});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -32,12 +47,11 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
-
-
 
 app.Run();

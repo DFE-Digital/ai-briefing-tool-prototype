@@ -6,7 +6,7 @@
 
         public string GetPrompt()
         {
-            string basePrompt = File.ReadAllText(Path.Join(Path.GetDirectoryName(Environment.ProcessPath), filename));
+            string basePrompt = File.ReadAllText(Path.Join(Path.GetDirectoryName(AppContext.BaseDirectory), filename));
 
             if (string.IsNullOrEmpty(basePrompt))
             {
