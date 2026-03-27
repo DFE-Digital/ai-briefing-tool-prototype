@@ -1,3 +1,4 @@
+using Azure.Core.Diagnostics;
 using BriefingTool.Config;
 using BriefingTool.Services;
 using DfE.FindInformationAcademiesTrusts.Setup;
@@ -21,6 +22,16 @@ builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRet
 builder.Services.AddScoped<IOfstedIndexer, OfstedIndexer>();
 builder.Services.AddScoped<IBriefingRunner, BriefingRunner>();
 
+builder.Services.AddOptions<AuthenticationConfig>();
+var apiKeysConfiguration = builder.Configuration.GetSection("AuthenticationConfig");
+builder.Services.Configure<AuthenticationConfig>(apiKeysConfiguration);
+
+
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Trace);
+
+AzureEventSourceListener.CreateTraceLogger();
+
 SecurityServicesSetup.AddSecurityServices(builder);
 
 builder.Services.Configure<AzureSettings>(
@@ -41,9 +52,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+//app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
+
 app.UseGovUkFrontend();
 
 app.UseHttpsRedirection();
+
+app.MapControllers();
 
 app.UseRouting();
 

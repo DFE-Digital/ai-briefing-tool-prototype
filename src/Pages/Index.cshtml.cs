@@ -1,19 +1,10 @@
-using Azure;
-using Azure.AI.OpenAI;
-using Azure.AI.OpenAI.Chat;
-using BriefingTool.Config;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using BriefingTool.Services;
-using Markdig;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Options;
-using OpenAI.Chat;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 
 
 namespace BriefingTool.Pages
@@ -57,11 +48,7 @@ namespace BriefingTool.Pages
         public string? DebugPrompt { get; set; }
 
         [BindProperty] public IFormFile? UploadFile { get; set; }
-
-        public int? TotalTokens { get; set; }
-
-
-
+        
         public void OnGet()
         {
 
@@ -91,6 +78,9 @@ namespace BriefingTool.Pages
                 AdditionalPrompt,
                 fileContents
             ));
+
+            //if(output.)
+
             Result = output.output;
             DebugPrompt = output.debug;
 

@@ -1,15 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
 using BriefingTool.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace BriefingTool.Pages
 {
     [Authorize]
-    public class AdminModel(IConfiguration configuration,
-        IAcademyInformationRetriever academyInformationRetriever,
-        IOfstedIndexer ofstedIndexer) : PageModel
+    public class AdminModel(IOfstedIndexer ofstedIndexer) : PageModel
     {
 
         [BindProperty]

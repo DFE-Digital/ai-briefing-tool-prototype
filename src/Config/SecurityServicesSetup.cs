@@ -50,8 +50,19 @@ public static class SecurityServicesSetup
             // Override the redirect URI scheme
             builder.Services.Configure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, options =>
             {
+
+
                 options.Events.OnRedirectToIdentityProvider = context =>
                 {
+
+                    var path = context.HttpContext.Request.Path;
+
+                    // Skip API routes
+                    if (path.StartsWithSegments("/api"))
+                    {
+                        return Task.CompletedTask;
+                    }
+
                     if (context.ProtocolMessage.RedirectUri.StartsWith("http://"))
                     {
                         context.ProtocolMessage.RedirectUri =

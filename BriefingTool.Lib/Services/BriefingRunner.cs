@@ -6,14 +6,14 @@ using BriefingTool.Pages;
 using Markdig;
 using Microsoft.Extensions.Options;
 using OpenAI.Chat;
-using System.ClientModel.Primitives;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 
 namespace BriefingTool.Services
 {
 
-    public record AIResult(string? output, string debug, int TotalTokens);
+    public record AIResult(string output, string debug, int TotalTokens);
 
     public record BriefingParameters(string AcademyName, bool Ofsted, bool Concerns, bool Financial, string? AdditionalPrompt, string? UploadFileContents);
 
@@ -57,32 +57,24 @@ namespace BriefingTool.Services
 
                 TopP = (float)0.95,
                 FrequencyPenalty = (float)0,
-                PresencePenalty = (float)0,
+                PresencePenalty = (float)0
             };
 
             logger.LogInformation($"AI endpoint: {azureSettings.AzureOpenaiEndpoint}");
 
             AzureKeyCredential credential = new AzureKeyCredential(azureSettings.AzureOpenaiKey);
 
-            var AIoptions = new AzureOpenAIClientOptions()
-            {
-                MessageLoggingPolicy = new MessageLoggingPolicy(
-                    new ClientLoggingOptions()
-                    {
-                        EnableLogging = true,
-                        EnableMessageContentLogging = true
-                    })
-            };
-
-
             // Initialize the AzureOpenAIClient
-            AzureOpenAIClient azureClient = new(new Uri(azureSettings.AzureOpenaiEndpoint), credential, AIoptions);
+            AzureOpenAIClient azureClient = new(new Uri(azureSettings.AzureOpenaiEndpoint), credential);
 
             // Initialize the ChatClient with the specified deployment name
-            ChatClient chatClient = azureClient.GetChatClient("gpt-4o");
+            ChatClient chatClient = azureClient.GetChatClient("UC021-gpt-4o");
 
             var academyData = academyInformationRetriever.GetAcademyInformation(briefing.AcademyName);
-            
+
+
+            var jsonAcademyData = JsonSerializer.Serialize(academyData);
+
             var promptBuilder = new PromptBuilder();
 
             promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
@@ -94,13 +86,11 @@ namespace BriefingTool.Services
                 {
                     Endpoint = new Uri(settings.Value.AzureSearchEndpoint),
                     IndexName = OfstedIndexName,
-                    Authentication = DataSourceAuthentication.FromApiKey(settings.Value.AzureSearchKey),
-                    MaxSearchQueries = 1
-                    
+                    Authentication = DataSourceAuthentication.FromApiKey(settings.Value.AzureSearchKey)
                 });
 
-                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt());
-                promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
+                promptBuilder.AddSystemMessage(ofstedPromptRetriever.GetPrompt());
+                promptBuilder.AddSystemMessage(ofstedSummaryPromptRetriever.GetPrompt());
             }
 
             //Data source provided by API
@@ -108,16 +98,16 @@ namespace BriefingTool.Services
             {
                 var concernsData = concernsInformationRetriever.GetTrustConcerns();
 
-                promptBuilder.AddUserMessage(concernsPromptRetriever.GetPrompt());
-                promptBuilder.AddUserMessage(
+                promptBuilder.AddSystemMessage(concernsPromptRetriever.GetPrompt());
+                promptBuilder.AddSystemMessage(
                     @$"Here are concerns related to the trust for this academy in the last 3 years associated with {briefing.AcademyName}: {concernsData}");
             }
 
             if (!string.IsNullOrWhiteSpace(briefing.UploadFileContents))
             {
                 //Cheating - adding the raw ofsted to data to fill in some of this information
-               // promptBuilder.AddSystemMessage(@$"Here is ofsted inspection data associated with {briefing.AcademyName} in JSON format: {jsonAcademyData}");
-                promptBuilder.AddUserMessage($"Here is the contents of the template which was originally docx file but I have converted html format that needs to be filled: {briefing.UploadFileContents}");
+                promptBuilder.AddSystemMessage(@$"Here is ofsted inspection data associated with {briefing.AcademyName} in JSON format: {jsonAcademyData}");
+                promptBuilder.AddSystemMessage($"Here is the contents of the template which was originally docx file but I have converted html format that needs to be filled: {briefing.UploadFileContents}");
             }
 
             promptBuilder.AddUserMessage(@$"Create a briefing for {briefing.AcademyName}");
@@ -153,7 +143,6 @@ namespace BriefingTool.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "An error occurred when calling AI model");
                 return new AIResult("", $"An error occurred: {ex.Message}", -1);
             }
         }
