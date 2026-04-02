@@ -6,7 +6,7 @@ using Microsoft.Identity.Web;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
-namespace DfE.FindInformationAcademiesTrusts.Setup;
+namespace BriefingTool.Config;
 
 [ExcludeFromCodeCoverage]
 public static class SecurityServicesSetup

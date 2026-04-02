@@ -1,5 +1,6 @@
 ﻿using BriefingTool.Middleware;
-using BriefingTool.Services;
+using BriefingTool.Models;
+using BriefingTool.Runners.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace BriefingTool.Api
@@ -12,13 +13,11 @@ namespace BriefingTool.Api
         [ApiKeyAuth]
         [AllowAnonymous]
         public async Task<IActionResult> PostAsync([FromForm] BriefingParameters briefingParameters, bool debug)
-        {
-
+        { 
             var output = await runner.GetBriefing(briefingParameters);
-            
-            //DebugPrompt = output.debug;
 
-            return Ok(output.output);
+            logger.LogInformation("Briefing output: {Output}", output);
+            return Ok(output.Output);
         }
     }
 }

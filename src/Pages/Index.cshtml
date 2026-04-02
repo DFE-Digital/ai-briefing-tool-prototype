@@ -5,12 +5,8 @@
     ViewData["Title"] = "Home page";
 
     const string academyName = nameof(Model.AcademyName);
-    const string ofsted = nameof(Model.Ofsted);
-    const string debugOutput = nameof(Model.DebugOutput);
-
-    const string additional = nameof(Model.AdditionalPrompt);
-
-
+    const string ofsted = nameof(Model.Ofsted); 
+    const string additional = nameof(Model.AdditionalPrompt);  
     const string concerns = nameof(Model.Concerns);
     const string uploadfile = nameof(Model.UploadFile);
 
@@ -47,10 +43,10 @@
                     You can add more details about the briefing you want to be created
                 </govuk-textarea-hint>
             </govuk-textarea>
-            <label class="govuk-label govuk-label--m">
+            <h3 class="govuk-label govuk-label--m">
                 Base my content on an existing template
-            </label>
-            <govuk-file-upload name="uploadfile" javascript="true">
+            </h3>
+            <govuk-file-upload name=@uploadfile" javascript="true">
                 <govuk-file-upload-label>By uploading an empty brief, submission or report template, this tool can try to create the content you usually include.</govuk-file-upload-label>
                 <govuk-file-upload-hint>Templates must be in Word document format</govuk-file-upload-hint>
             </govuk-file-upload>
