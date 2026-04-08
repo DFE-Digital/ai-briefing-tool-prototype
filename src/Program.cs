@@ -1,7 +1,15 @@
 using Azure.Core.Diagnostics;
+using BriefingTool.Builders;
+using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
+using BriefingTool.Indexers;
+using BriefingTool.Indexers.Interfaces;
+using BriefingTool.Retrievers;
+using BriefingTool.Retrievers.Interfaces;
+using BriefingTool.Runners;
+using BriefingTool.Runners.Interfaces;
 using BriefingTool.Services;
-using DfE.FindInformationAcademiesTrusts.Setup;
+using BriefingTool.Services.Interfaces;
 using GovUk.Frontend.AspNetCore;
 using Microsoft.AspNetCore.HttpOverrides;
 
@@ -21,11 +29,21 @@ builder.Services.AddScoped<IOfstedSummaryPromptRetriever, OfstedSummaryPromptRet
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
 builder.Services.AddScoped<IOfstedIndexer, OfstedIndexer>();
 builder.Services.AddScoped<IBriefingRunner, BriefingRunner>();
+builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
+builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
 
+
+// Configurations
 builder.Services.AddOptions<AuthenticationConfig>();
 var apiKeysConfiguration = builder.Configuration.GetSection("AuthenticationConfig");
 builder.Services.Configure<AuthenticationConfig>(apiKeysConfiguration);
 
+var azureSettings = builder.Configuration.GetSection("AzureSettings").Get<AzureSettings>()
+    ?? throw new InvalidOperationException("AzureSettings section is missing!");
+builder.Services.AddSingleton(azureSettings);
+var authConfig = builder.Configuration.GetSection("AuthenticationConfig").Get<AuthenticationConfig>()
+    ?? throw new InvalidOperationException("AuthenticationConfig section is missing!");
+builder.Services.AddSingleton(authConfig);
 
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
@@ -33,9 +51,6 @@ builder.Logging.SetMinimumLevel(LogLevel.Trace);
 AzureEventSourceListener.CreateTraceLogger();
 
 SecurityServicesSetup.AddSecurityServices(builder);
-
-builder.Services.Configure<AzureSettings>(
-    builder.Configuration.GetSection("AzureSettings"));
 
 var app = builder.Build();
 
@@ -52,8 +67,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
-
 app.UseGovUkFrontend();
 
 app.UseHttpsRedirection();
@@ -69,4 +82,4 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-app.Run();
+await app.RunAsync();

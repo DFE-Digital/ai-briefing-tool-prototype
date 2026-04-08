@@ -13,10 +13,10 @@ public class ApiKeyAuthenticationMiddleware
     private readonly RequestDelegate _next;
     private readonly ICollection<string> _apiKeys;
 
-    public ApiKeyAuthenticationMiddleware(RequestDelegate next, IOptions<AuthenticationConfig> options)
+    public ApiKeyAuthenticationMiddleware(RequestDelegate next, AuthenticationConfig authenticationConfig)
     {
-        ArgumentNullException.ThrowIfNull(options.Value.ApiKeys);
-        (_next, _apiKeys) = (next, options.Value.ApiKeys);
+        ArgumentNullException.ThrowIfNull(authenticationConfig.ApiKeys);
+        (_next, _apiKeys) = (next, authenticationConfig.ApiKeys);
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -35,7 +35,7 @@ public class ApiKeyAuthenticationMiddleware
             return;
         }
 
-        if (!_apiKeys.Contains(requestApiKey))
+        if (!_apiKeys.Contains(requestApiKey!))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(UnauthorisedResponse);

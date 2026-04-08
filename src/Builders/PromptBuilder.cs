@@ -1,9 +1,10 @@
-using System.Text;
+using BriefingTool.Builders.Interfaces;
 using OpenAI.Chat;
+using System.Text;
 
-namespace BriefingTool.Services;
+namespace BriefingTool.Builders;
 
-public class PromptBuilder
+public class PromptBuilder: IPromptBuilder
 {
     private readonly List<ChatMessage> _messages = [];
     private readonly StringBuilder _promptBuilder = new();
