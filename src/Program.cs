@@ -4,14 +4,17 @@ using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
 using BriefingTool.Indexers;
 using BriefingTool.Indexers.Interfaces;
+using BriefingTool.Mcp.Factories;
 using BriefingTool.Retrievers;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners;
 using BriefingTool.Runners.Interfaces;
 using BriefingTool.Services;
 using BriefingTool.Services.Interfaces;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using GovUk.Frontend.AspNetCore;
 using Microsoft.AspNetCore.HttpOverrides;
+using ReverseMarkdown;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +34,8 @@ builder.Services.AddScoped<IOfstedIndexer, OfstedIndexer>();
 builder.Services.AddScoped<IBriefingRunner, BriefingRunner>();
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
+builder.Services.AddScoped<IMcpClientFactory, McpClientFactory>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 
 // Configurations
@@ -44,6 +49,14 @@ builder.Services.AddSingleton(azureSettings);
 var authConfig = builder.Configuration.GetSection("AuthenticationConfig").Get<AuthenticationConfig>()
     ?? throw new InvalidOperationException("AuthenticationConfig section is missing!");
 builder.Services.AddSingleton(authConfig);
+var mcpClientConfig = builder.Configuration.GetSection("Mcp:Client").Get<McpClientConfig>()
+    ?? throw new InvalidOperationException("Mcp Client section is missing!");
+builder.Services.AddSingleton(mcpClientConfig);
+var azureAdConfig = builder.Configuration.GetSection("Mcp:AzureAd").Get<AzureAdConfig>()
+    ?? throw new InvalidOperationException("Mcp Azure AD section is missing!");
+builder.Services.AddSingleton(azureAdConfig);
+
+ 
 
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);

@@ -9,23 +9,29 @@
 
   <ItemGroup>
     
+    <PackageReference Include="Azure.AI.Projects" Version="2.0.0" />
+    
     <PackageReference Include="Azure.Communication.Chat" Version="1.4.0" />
-    <PackageReference Include="Azure.Identity" Version="1.17.1" />
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Azure.Search.Documents" Version="11.7.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
     <PackageReference Include="GovUk.Frontend.AspNetCore" Version="3.4.0" />
     <PackageReference Include="Markdig" Version="0.42.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Foundry" Version="1.2.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="4.3.0" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.72.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.72.0-preview" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.InMemory" Version="1.72.0-preview" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.72.0" />
+    <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.2.0" />
     <PackageReference Include="OpenXmlPowerTools" Version="4.5.3.2" />
     <PackageReference Include="ReverseMarkdown" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
   <ItemGroup>
