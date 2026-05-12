@@ -205,7 +205,7 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
             return new AIResult(string.Empty, $"An error occurred: {ex.Message}", -1);
         }
     }
-    private string ProcessResults(string rawJson, double minScore, int limit)
+    private static string ProcessResults(string rawJson, double minScore, int limit)
     {
         using var doc = JsonDocument.Parse(rawJson);
         var root = doc.RootElement;
