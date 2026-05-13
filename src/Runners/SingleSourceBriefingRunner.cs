@@ -12,7 +12,7 @@ using System.Text;
 
 namespace BriefingTool.Runners;
 
-public class BriefingRunner(ILogger<BriefingRunner> logger,
+public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logger,
     IBasePromptRetriever basePromptRetriever,
     IConcernsPromptRetriever concernsPromptRetriever,
     IOfstedPromptRetriever ofstedPromptRetriever,
@@ -20,7 +20,7 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
     IAzureOpenAIService azureOpenAIService,
-    IPromptBuilder promptBuilder) : IBriefingRunner
+    IPromptBuilder promptBuilder) : ISingleSourceBriefingRunner
 {
     private const string OfstedIndexName = "ofstedindex";
 
@@ -56,16 +56,16 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
             if (briefing.Ofsted)
             {
                 chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
-                
-                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt()); 
+
+                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt());
             }
             if (briefing.OfstedSummary)
             {
                 if (!briefing.Ofsted)
                     chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
-                 
+
                 promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
-            } 
+            }
         }
         SetAISearchDataSourceForOfsted(briefing, chatCompletionOptions, azureSettings);
         SetConcernsPrompts(briefing);

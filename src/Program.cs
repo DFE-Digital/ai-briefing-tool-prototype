@@ -29,6 +29,7 @@ builder.Services.AddScoped<IOfstedSummaryPromptRetriever, OfstedSummaryPromptRet
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
 builder.Services.AddScoped<IOfstedIndexer, OfstedIndexer>();
 builder.Services.AddScoped<IBriefingRunner, BriefingRunner>();
+builder.Services.AddScoped<ISingleSourceBriefingRunner, SingleSourceBriefingRunner>();
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
 

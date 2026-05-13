@@ -28,6 +28,10 @@ public class IndexModel(ILogger<IndexModel> logger, IBriefingRunner runner) : Pa
     public bool Ofsted { get; set; }
 
     [BindProperty]
+    [Display(Name = "OfstedSummary")]
+    public bool OfstedSummary { get; set; }
+
+    [BindProperty]
     [Display(Name = "Concerns")]
     public bool Concerns { get; set; }
 
@@ -64,7 +68,7 @@ public class IndexModel(ILogger<IndexModel> logger, IBriefingRunner runner) : Pa
             fileContents = await ConvertFile(UploadFile);
         }
 
-        var output = await runner.GetBriefing(new BriefingParameters(AcademyName ?? "", Ofsted, Concerns, Financial, AdditionalPrompt, fileContents));
+        var output = await runner.GetBriefing(new BriefingParameters(AcademyName ?? "", Ofsted,OfstedSummary, Concerns, Financial, AdditionalPrompt, fileContents));
 
         Result = output.Output;
         DebugPrompt = output.Debug;
