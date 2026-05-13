@@ -6,6 +6,7 @@
 
     const string academyName = nameof(Model.AcademyName);
     const string ofsted = nameof(Model.Ofsted); 
+    const string ofstedSummary = nameof(Model.OfstedSummary);
     const string additional = nameof(Model.AdditionalPrompt);  
     const string concerns = nameof(Model.Concerns);
     const string uploadfile = nameof(Model.UploadFile);
@@ -26,6 +27,9 @@
                     </govuk-checkboxes-fieldset-legend>
                     <govuk-checkboxes-item asp-for="@Model.Ofsted" name="@ofsted" value="true" checked="@Model.Ofsted">
                         <b>Ofsted</b>
+                    </govuk-checkboxes-item>
+                    <govuk-checkboxes-item asp-for="@Model.OfstedSummary" name="@ofstedSummary" value="true" checked="@Model.OfstedSummary">
+                        <b>Ofsted Summary</b>
                     </govuk-checkboxes-item>
                     <govuk-checkboxes-item asp-for="@Model.Concerns" name="@concerns" value="true" checked="@Model.Concerns">
                         <b>Concerns</b>

@@ -66,11 +66,17 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
             // AI Search data source
             if (briefing.Ofsted)
             {
-                //chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName)); 
-
-                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt());
-                promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
+                chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
+                
+                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt()); 
             }
+            if (briefing.OfstedSummary)
+            {
+                if (!briefing.Ofsted)
+                    chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
+                 
+                promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
+            } 
         }
         SetAISearchDataSourceForOfsted(briefing, chatCompletionOptions, azureSettings);
         SetConcernsPrompts(briefing);
