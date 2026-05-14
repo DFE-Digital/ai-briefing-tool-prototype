@@ -1,5 +1,4 @@
-﻿using Azure.AI.OpenAI.Chat;
-using BriefingTool.Builders.Interfaces;
+﻿using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
 using BriefingTool.Mcp.Factories;
 using BriefingTool.Models;

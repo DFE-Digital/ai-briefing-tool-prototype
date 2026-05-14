@@ -29,9 +29,10 @@ builder.Services.AddScoped<IAcademyInformationRetriever, AcademyInformationRetri
 builder.Services.AddScoped<IOfstedPromptRetriever, OfstedPromptRetriever>();
 builder.Services.AddScoped<IOfstedSummaryPromptRetriever, OfstedSummaryPromptRetriever>();
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
-builder.Services.AddScoped<IOfstedIndexer, OfstedIndexer>();
+builder.Services.AddScoped<IAzureSearchService, AzureSearchService>(); 
+builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
 builder.Services.AddKeyedScoped<IBriefingRunner, BriefingRunner>(RunnerServiceType.Mcp);
-builder.Services.AddKeyedScoped<IBriefingRunner, AgentBriefingRunner>(RunnerServiceType.Agent);
+builder.Services.AddKeyedScoped<IBriefingRunner, AgentAssistantBriefingRunner>(RunnerServiceType.AgentAssistant);
 builder.Services.AddKeyedScoped<IBriefingRunner, SingleSourceBriefingRunner>(RunnerServiceType.SingleDataSource);
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();

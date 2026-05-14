@@ -1,8 +1,13 @@
 ﻿using Azure;
-using Azure.AI.OpenAI; 
+using Azure.AI.OpenAI;
 using BriefingTool.Services.Interfaces;
+using Microsoft.Agents.AI;
+using OpenAI;
+using OpenAI.Assistants;
 using OpenAI.Chat;
+using System.ClientModel;
 using System.ClientModel.Primitives;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BriefingTool.Services;
 
@@ -49,4 +54,40 @@ public class AzureOpenAIService : IAzureOpenAIService
         };
         return new AzureOpenAIClient(endpointUri, new AzureKeyCredential(azureOpenaiKey), azureOpenAIClientOptions);
     }
+    public OpenAIClient InitialiseOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint)
+    {
+        if (string.IsNullOrEmpty(azureOpenaiKey))
+            throw new ArgumentNullException(nameof(azureOpenaiKey), "OpenAI API Key not found");
+
+        if (string.IsNullOrEmpty(azureOpenaiEndpoint))
+            throw new ArgumentNullException(nameof(azureOpenaiEndpoint), "OpenAI Endpoint not found");
+
+        if (!Uri.TryCreate(azureOpenaiEndpoint, UriKind.Absolute, out var endpointUri))
+            throw new ArgumentException("Invalid Azure OpenAI Endpoint URI", nameof(azureOpenaiEndpoint));
+
+        var clientOptions = new OpenAIClientOptions() { Endpoint = endpointUri };
+         
+        return new OpenAIClient(new ApiKeyCredential(azureOpenaiKey), clientOptions);
+    }
+
+    [Experimental("AOAI002")]
+    public async Task<Assistant> CreateAgentAssistantAsync(OpenAIClient openAIClient, string model, string instruction)
+    {
+        ArgumentNullException.ThrowIfNull(openAIClient);
+        ArgumentException.ThrowIfNullOrWhiteSpace(model);
+        ArgumentException.ThrowIfNullOrWhiteSpace(instruction);
+
+        AssistantClient assistantClient = openAIClient.GetAssistantClient();
+
+        var options = new AssistantCreationOptions
+        {
+            Name = $"BriefingAgent-{Guid.NewGuid()}",
+            Instructions = instruction,
+        };
+
+        Assistant agent = await assistantClient.CreateAssistantAsync(model, options);
+
+        return agent;
+    }
+
 }

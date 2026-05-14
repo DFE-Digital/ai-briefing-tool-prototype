@@ -3,7 +3,7 @@
     public class RunnerServiceType
     {
         public const string SingleDataSource = "single-ds";
-        public const string Agent = "agent";
+        public const string AgentAssistant = "agent-assistant";
         public const string Mcp = "mcp";
     }
 }
