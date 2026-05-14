@@ -1,18 +1,20 @@
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+using BriefingTool.Constants;
 using BriefingTool.Converter;
 using BriefingTool.Models;
 using BriefingTool.Runners.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using OpenXmlPowerTools;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 
 
 namespace BriefingTool.Pages;
 
 [Authorize]
-public class IndexModel(ILogger<IndexModel> logger, IBriefingRunner runner) : PageModel
+public class IndexModel(ILogger<IndexModel> logger, IServiceProvider serviceProvider) : PageModel
 {
     [BindProperty]
     [Required(ErrorMessage = "Enter an academy name")]
@@ -53,6 +55,10 @@ public class IndexModel(ILogger<IndexModel> logger, IBriefingRunner runner) : Pa
 
     [BindProperty] public IFormFile? UploadFile { get; set; }
 
+    [BindProperty]
+    [Display(Name = "Single Data Source")]
+    public string? SelectedService { get; set; } = RunnerServiceType.SingleDataSource;
+
     [Experimental("AOAI001")]
     public async Task<IActionResult> OnPostAsync()
     {
@@ -67,8 +73,9 @@ public class IndexModel(ILogger<IndexModel> logger, IBriefingRunner runner) : Pa
         {
             fileContents = await ConvertFile(UploadFile);
         }
+        var service = serviceProvider.GetRequiredKeyedService<IBriefingRunner>(SelectedService);
 
-        var output = await runner.GetBriefing(new BriefingParameters(AcademyName ?? "", Ofsted,OfstedSummary, Concerns, Financial, AdditionalPrompt, fileContents));
+        var output = await service.GetBriefing(new BriefingParameters(AcademyName ?? "", Ofsted,OfstedSummary, Concerns, Financial, AdditionalPrompt, fileContents));
 
         Result = output.Output;
         DebugPrompt = output.Debug;

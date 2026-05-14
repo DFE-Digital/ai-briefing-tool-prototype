@@ -1,4 +1,5 @@
 ﻿@page
+@using BriefingTool.Constants
 @using Microsoft.AspNetCore.Html
 @model IndexModel
 @{
@@ -10,6 +11,8 @@
     const string additional = nameof(Model.AdditionalPrompt);  
     const string concerns = nameof(Model.Concerns);
     const string uploadfile = nameof(Model.UploadFile);
+    const string connectivityType = nameof(Model.SelectedService);
+     
 
     var ResultHtml = new HtmlString(@Model.Result);
 }
@@ -39,6 +42,17 @@
                     </govuk-checkboxes-item>
                 </govuk-checkboxes-fieldset>
             </govuk-checkboxes>
+
+            <govuk-radios name="@connectivityType" id="@(connectivityType)-fieldset" for="@Model.SelectedService">
+                <govuk-radios-fieldset>
+                    <govuk-radios-fieldset-legend is-page-heading="true" class="govuk-fieldset__legend--m">
+                           Access Data Sources
+                    </govuk-radios-fieldset-legend>
+                    <govuk-radios-item value="@RunnerServiceType.Mcp" checked="@(Model.SelectedService == RunnerServiceType.Mcp)">MCP</govuk-radios-item>
+                    <govuk-radios-item value="@RunnerServiceType.SingleDataSource" checked="@(Model.SelectedService == RunnerServiceType.SingleDataSource)">Single Data Source</govuk-radios-item>
+                    <govuk-radios-item value="@RunnerServiceType.Agent" checked="@(Model.SelectedService == RunnerServiceType.Agent)">Agent</govuk-radios-item>
+                </govuk-radios-fieldset>
+            </govuk-radios>
             <govuk-textarea name="@additional" for="@Model.AdditionalPrompt">
                 <govuk-textarea-label class="govuk-label--m" is-page-heading="true">
                     Extra instructions (optional)

@@ -7,25 +7,15 @@ namespace BriefingTool.Api
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BriefingController(ILogger<BriefingController> logger, IBriefingRunner runner, ISingleSourceBriefingRunner singleSourceBriefingRunner) : ControllerBase
+    public class BriefingController(ILogger<BriefingController> logger, IServiceProvider serviceProvider) : ControllerBase
     {
         [HttpPost]
         [ApiKeyAuth]
         [AllowAnonymous]
         public async Task<IActionResult> PostAsync([FromForm] BriefingParameters briefingParameters, bool debug)
-        { 
-            var output = await runner.GetBriefing(briefingParameters);
-
-            logger.LogInformation("Briefing output: {Output}", output);
-            return Ok(output.Output);
-        }
-
-        [HttpPost]
-        [ApiKeyAuth]
-        [AllowAnonymous]
-        public async Task<IActionResult> SingleSourcePostAsync([FromForm] BriefingParameters briefingParameters, bool debug)
         {
-            var output = await singleSourceBriefingRunner.GetBriefing(briefingParameters);
+            var service = serviceProvider.GetRequiredKeyedService<IBriefingRunner>(briefingParameters.RunnerServiceType);
+            var output = await service.GetBriefing(briefingParameters);
 
             logger.LogInformation("Briefing output: {Output}", output);
             return Ok(output.Output);

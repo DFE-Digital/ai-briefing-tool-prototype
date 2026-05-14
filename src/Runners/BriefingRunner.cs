@@ -27,10 +27,6 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
     IPromptBuilder promptBuilder,
     IMcpClientFactory mcpClientFactory) : IBriefingRunner
 {
-    private const string OfstedIndexName = "ofstedindex";
-
-    
-
     [Experimental("AOAI001")]
     public async Task<AIResult> GetBriefing(BriefingParameters briefing)
     {
@@ -43,42 +39,22 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
         var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
         await using var mcpClient = await mcpClientFactory.CreateClientAsync();
         var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "GetSystemPrompt", "BriefingTool");
-        promptBuilder.AddSystemMessage(string.IsNullOrWhiteSpace(systemMessage)
-            ? basePromptRetriever.GetPrompt() : systemMessage);
-
-        //promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
+        promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
 
         var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions(); 
-
-        // AI Search data source
-        AzureSearchChatDataSource GetChatDataSource(string azureOpenaiKey, string azureOpenaiEndpoint, string indexName)
-        {
-            return new AzureSearchChatDataSource()
-            {
-                Endpoint = new Uri(azureOpenaiEndpoint),
-                IndexName = indexName,
-                Authentication = DataSourceAuthentication.FromApiKey(azureOpenaiKey),
-                MaxSearchQueries = 1
-            };
-        }
-        void SetAISearchDataSourceForOfsted(BriefingParameters briefing, ChatCompletionOptions chatCompletionOptions, AzureSettings azureSettings)
-        {
-            // AI Search data source
+         
+        void SetAISearchDataSourceForOfsted(BriefingParameters briefing)
+        { 
             if (briefing.Ofsted)
             {
-                chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
-                
                 promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt()); 
             }
             if (briefing.OfstedSummary)
             {
-                if (!briefing.Ofsted)
-                    chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
-                 
                 promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
             } 
         }
-        SetAISearchDataSourceForOfsted(briefing, chatCompletionOptions, azureSettings);
+        SetAISearchDataSourceForOfsted(briefing);
         SetConcernsPrompts(briefing);
         SetsBriefingResponseTemplate(briefing);
 

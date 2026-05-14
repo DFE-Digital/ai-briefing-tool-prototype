@@ -12,7 +12,7 @@ using System.Text;
 
 namespace BriefingTool.Runners;
 
-public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logger,
+public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger,
     IBasePromptRetriever basePromptRetriever,
     IConcernsPromptRetriever concernsPromptRetriever,
     IOfstedPromptRetriever ofstedPromptRetriever,
