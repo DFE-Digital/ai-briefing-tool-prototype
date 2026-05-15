@@ -1,5 +1,11 @@
 ﻿using Azure.AI.OpenAI;
+using Azure.AI.Projects;
+using Azure.Core;
+using Microsoft.Agents.AI;
+using OpenAI;
+using OpenAI.Assistants;
 using OpenAI.Chat;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BriefingTool.Services.Interfaces;
 
@@ -28,4 +34,9 @@ public interface IAzureOpenAIService
     /// <param name="excludeAzureOpenAIClientOptions">Exclude Azure Open AI client options (By default false).</param>
     /// <returns></returns>
     AzureOpenAIClient InitialiseAzureOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint, bool excludeAzureOpenAIClientOptions = false);
+
+    OpenAIClient InitialiseOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint);
+
+    [Experimental("AOAI002")]
+    Task<Assistant> CreateAgentAssistantAsync(OpenAIClient openAIClient, string model, string instruction);
 }

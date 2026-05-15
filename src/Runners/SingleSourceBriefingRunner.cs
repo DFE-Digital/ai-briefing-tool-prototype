@@ -20,7 +20,7 @@ public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logg
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
     IAzureOpenAIService azureOpenAIService,
-    IPromptBuilder promptBuilder) : ISingleSourceBriefingRunner
+    IPromptBuilder promptBuilder) : IBriefingRunner
 {
     private const string OfstedIndexName = "ofstedindex";
 

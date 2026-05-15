@@ -1,14 +1,17 @@
-﻿using Azure.AI.OpenAI.Chat;
-using BriefingTool.Builders.Interfaces;
+﻿using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
+using BriefingTool.Mcp.Factories;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
 using BriefingTool.Services.Interfaces;
 using Markdig;
+using ModelContextProtocol;
+using ModelContextProtocol.Client;
 using OpenAI.Chat;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 
 namespace BriefingTool.Runners;
 
@@ -20,10 +23,9 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
     IAzureOpenAIService azureOpenAIService,
-    IPromptBuilder promptBuilder) : IBriefingRunner
+    IPromptBuilder promptBuilder,
+    IMcpClientFactory mcpClientFactory) : IBriefingRunner
 {
-    private const string OfstedIndexName = "ofstedindex";
-
     [Experimental("AOAI001")]
     public async Task<AIResult> GetBriefing(BriefingParameters briefing)
     {
@@ -32,42 +34,26 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
             return new AIResult("", "Enter an academy name", -1);
         }
         logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
-
+        
         var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
+        await using var mcpClient = await mcpClientFactory.CreateClientAsync();
+        var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "GetSystemPrompt", "BriefingTool");
         promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
 
-        var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions();
-
-
-        // AI Search data source
-        AzureSearchChatDataSource GetChatDataSource(string azureOpenaiKey, string azureOpenaiEndpoint, string indexName)
-        {
-            return new AzureSearchChatDataSource()
-            {
-                Endpoint = new Uri(azureOpenaiEndpoint),
-                IndexName = indexName,
-                Authentication = DataSourceAuthentication.FromApiKey(azureOpenaiKey),
-                MaxSearchQueries = 1
-            };
-        }
-        void SetAISearchDataSourceForOfsted(BriefingParameters briefing, ChatCompletionOptions chatCompletionOptions, AzureSettings azureSettings)
-        {
-            // AI Search data source
+        var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions(); 
+         
+        void SetAISearchDataSourceForOfsted(BriefingParameters briefing)
+        { 
             if (briefing.Ofsted)
             {
-                chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
-                
                 promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt()); 
             }
             if (briefing.OfstedSummary)
             {
-                if (!briefing.Ofsted)
-                    chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
-                 
                 promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
             } 
         }
-        SetAISearchDataSourceForOfsted(briefing, chatCompletionOptions, azureSettings);
+        SetAISearchDataSourceForOfsted(briefing);
         SetConcernsPrompts(briefing);
         SetsBriefingResponseTemplate(briefing);
 
@@ -75,7 +61,7 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
 
         SetsAdditionalPrompt(briefing);
 
-        return await CreateCompleteChatResponseAsync(chatClient, chatCompletionOptions);
+        return await CreateCompleteChatResponseAsync(chatClient, mcpClient, chatCompletionOptions);
     }
 
     /// <summary>
@@ -124,36 +110,107 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
     /// <param name="chatClient">An Azure Open AI chat client.</param>
     /// <param name="chatCompletionOptions">An instance of ChatCompletionOptions.</param>
     /// <returns></returns>
-    private async Task<AIResult> CreateCompleteChatResponseAsync(ChatClient chatClient, ChatCompletionOptions chatCompletionOptions)
+    private async Task<AIResult> CreateCompleteChatResponseAsync(ChatClient chatClient, McpClient mcpClient, ChatCompletionOptions chatCompletionOptions)
     {
         ArgumentNullException.ThrowIfNull(chatClient);
         try
         {
-            var TotalTokens = 0;
-            // Create the chat completion request
-            ChatCompletion completion = await chatClient.CompleteChatAsync(promptBuilder.GetMessages(), chatCompletionOptions);
+            var totalTokens = 0;  
 
-            // Print the response
-            if (completion != null)
+            var tools = await mcpClient.ListToolsAsync();
+            foreach (var tool in tools)
             {
-                var chatResult = new StringBuilder();
-                foreach (var content in completion.Content)
-                {
-                    TotalTokens += completion.Usage.TotalTokenCount;
-                    string html = Markdown.ToHtml(content.Text);
+                chatCompletionOptions.Tools.Add(mcpClientFactory.ConvertToChatTool(tool));
+            }
+            
+            var messages = promptBuilder.GetMessages().ToList();
+            ChatCompletion completion;
 
-                    chatResult.Append(html);
+            do
+            {
+                completion = await chatClient.CompleteChatAsync(messages, chatCompletionOptions);
+
+                if (completion.FinishReason == ChatFinishReason.ToolCalls)
+                {
+                    // Add assistant's tool-call turn to history
+                    messages.Add(new AssistantChatMessage(completion));
+
+                    // Execute each tool via MCP and collect results
+                    foreach (var toolCall in completion.ToolCalls)
+                    {
+                        string toolResult;
+                        try
+                        {
+                            var mcpResult = await mcpClient.CallToolAsync(
+                                toolCall.FunctionName,
+                                JsonSerializer.Deserialize<Dictionary<string, object?>>(
+                                    toolCall.FunctionArguments)
+                                ?? []
+                            );
+
+                            var rawText = string.Join("\n", mcpResult.Content
+                                .Where(c => c.Type == "text")
+                                .Select(c => c.ToAIContent()));
+
+                            // Filter by score > 7 if the tool result is JSON
+                            toolResult = ProcessResults(rawText, 7, limit: 10);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning(ex, "Tool call '{Tool}' failed", toolCall.FunctionName);
+                            toolResult = $"Error calling tool: {ex.Message}";
+                        }
+
+                        messages.Add(new ToolChatMessage(toolCall.Id, toolResult));
+                    }
                 }
 
-                return new AIResult(chatResult.ToString(), promptBuilder.GetPrompt(), TotalTokens);
+            } while (completion.FinishReason == ChatFinishReason.ToolCalls);
+
+            // Model has finished — read the final content response
+            totalTokens += completion.Usage?.TotalTokenCount ?? 0;
+
+            var chatResult = new StringBuilder();
+            foreach (var content in completion.Content)
+            {
+                chatResult.Append(Markdown.ToHtml(content.Text));
             }
 
-            return new AIResult(string.Empty, "No response received.", -1);
+            return chatResult.Length > 0
+                ? new AIResult(chatResult.ToString(), promptBuilder.GetPrompt(), totalTokens)
+                : new AIResult(string.Empty, "No response received.", -1);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occurred when calling AI model");
-            return new AIResult("", $"An error occurred: {ex.Message}", -1);
+            return new AIResult(string.Empty, $"An error occurred: {ex.Message}", -1);
         }
+    }
+    private static string ProcessResults(string rawJson, double minScore, int limit)
+    {
+        using var doc = JsonDocument.Parse(rawJson);
+        var root = doc.RootElement;
+        var totalCount = root.GetProperty("TotalCount").GetInt32();
+
+        var filtered = root
+            .GetProperty("Results")
+            .EnumerateArray()
+            .Where(item =>
+                item.TryGetProperty("Score", out var score) &&
+                score.TryGetDouble(out var value) &&
+                value > minScore)
+            .Take(limit)
+            .Select(item => item.GetRawText())
+            .ToList();
+
+        var result = new
+        {
+            TotalCount = totalCount,
+            Showing = filtered.Count,
+            HasMore = totalCount > limit,
+            Results = filtered.Select(r => JsonSerializer.Deserialize<JsonElement>(r))
+        };
+
+        return JsonSerializer.Serialize(result);
     }
 }
