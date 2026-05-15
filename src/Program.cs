@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services.AddGovUkFrontend(options => options.Rebrand = true);
+builder.Services.AddGovUkFrontend();
 
 builder.Services.AddScoped<IBasePromptRetriever, BasePromptRetriever>();
 builder.Services.AddScoped<IConcernsPromptRetriever, ConcernsPromptRetriever>();
@@ -32,6 +32,7 @@ builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRet
 builder.Services.AddScoped<IAzureSearchService, AzureSearchService>(); 
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
 builder.Services.AddKeyedScoped<IBriefingRunner, BriefingRunner>(RunnerServiceType.Mcp);
+builder.Services.AddKeyedScoped<IBriefingRunner, AgentBriefingRunner>(RunnerServiceType.Agent);
 builder.Services.AddKeyedScoped<IBriefingRunner, AgentAssistantBriefingRunner>(RunnerServiceType.AgentAssistant);
 builder.Services.AddKeyedScoped<IBriefingRunner, SingleSourceBriefingRunner>(RunnerServiceType.SingleDataSource);
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();

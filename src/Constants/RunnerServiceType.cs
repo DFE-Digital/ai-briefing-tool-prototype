@@ -4,6 +4,7 @@
     {
         public const string SingleDataSource = "single-ds";
         public const string AgentAssistant = "agent-assistant";
+        public const string Agent = "agent";
         public const string Mcp = "mcp";
     }
 }

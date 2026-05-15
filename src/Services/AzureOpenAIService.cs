@@ -1,5 +1,8 @@
 ﻿using Azure;
+using Azure.AI.Extensions.OpenAI;
 using Azure.AI.OpenAI;
+using Azure.AI.Projects;
+using Azure.Identity;
 using BriefingTool.Services.Interfaces;
 using Microsoft.Agents.AI;
 using OpenAI;
@@ -68,7 +71,7 @@ public class AzureOpenAIService : IAzureOpenAIService
         var clientOptions = new OpenAIClientOptions() { Endpoint = endpointUri };
          
         return new OpenAIClient(new ApiKeyCredential(azureOpenaiKey), clientOptions);
-    }
+    } 
 
     [Experimental("AOAI002")]
     public async Task<Assistant> CreateAgentAssistantAsync(OpenAIClient openAIClient, string model, string instruction)

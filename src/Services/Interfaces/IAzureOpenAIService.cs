@@ -1,5 +1,7 @@
 ﻿using Azure.AI.OpenAI;
+using Azure.AI.Projects;
 using Azure.Core;
+using Microsoft.Agents.AI;
 using OpenAI;
 using OpenAI.Assistants;
 using OpenAI.Chat;
