@@ -1,5 +1,6 @@
 ﻿using Azure.Search.Documents;
 using BriefingTool.Config;
+using BriefingTool.Enums;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
@@ -13,10 +14,7 @@ namespace BriefingTool.Runners;
 
 public class AgentAssistantBriefingRunner(
     ILogger<AgentAssistantBriefingRunner> logger,
-    IBasePromptRetriever basePromptRetriever,
-    IConcernsPromptRetriever concernsPromptRetriever,
-    IOfstedPromptRetriever ofstedPromptRetriever,
-    IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever,
+    IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
     IAzureOpenAIService azureOpenAIService,
@@ -36,7 +34,7 @@ public class AgentAssistantBriefingRunner(
 
         var assistantClient = openAIClient.GetAssistantClient();
          
-        var instruction = basePromptRetriever.GetPrompt();
+        var instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
          
         SearchClient establishmentClient = azureSearchService.CreateSearchClient(azureSettings, azureSettings.AzureSearchIndex); 
         var establishmentContext = await azureSearchService.GetContentAsync(establishmentClient, briefing.AcademyName);
@@ -121,7 +119,7 @@ public class AgentAssistantBriefingRunner(
         if (briefing.Concerns)
         {
             var concernsData = concernsInformationRetriever.GetTrustConcerns();
-            parts.Add(MessageContent.FromText(concernsPromptRetriever.GetPrompt()));
+            parts.Add(MessageContent.FromText(promptRetrieverService.GetUserPrompt(UserPromptType.Concerns)));
             parts.Add(MessageContent.FromText($"Here are concerns related to the trust for this academy in the last 3 years associated with {briefing.AcademyName}: {concernsData}"));
         }
     }
@@ -133,10 +131,10 @@ public class AgentAssistantBriefingRunner(
             return;
 
         if (briefing.Ofsted)
-            parts.Add(MessageContent.FromText(ofstedPromptRetriever.GetPrompt()));
+            parts.Add(MessageContent.FromText(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted)));
 
         if (briefing.OfstedSummary)
-            parts.Add(MessageContent.FromText(ofstedSummaryPromptRetriever.GetPrompt()));
+            parts.Add(MessageContent.FromText(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary)));
 
         var searchClient = azureSearchService.CreateSearchClient(azureSettings, OfstedIndexName);
         var ofstedContext = await azureSearchService.GetContentAsync(searchClient, briefing.AcademyName);

@@ -2,6 +2,7 @@
 using Azure.Identity;
 using Azure.Search.Documents;
 using BriefingTool.Config;
+using BriefingTool.Enums;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
@@ -13,8 +14,8 @@ using System.Text;
 
 namespace BriefingTool.Runners;
 
-public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromptRetriever basePromptRetriever, IConcernsPromptRetriever concernsPromptRetriever,
-    IOfstedPromptRetriever ofstedPromptRetriever, IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever, IConcernsInformationRetriever concernsInformationRetriever,
+public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRetrieverService promptRetrieverService,
+    IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings, IAzureSearchService azureSearchService) : IBriefingRunner
 {
     private const string OfstedIndexName = "ofstedindex";
@@ -27,7 +28,7 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
 
         logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
 
-        string instruction = basePromptRetriever.GetPrompt();
+        string instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
 
         AIAgent agent = new AIProjectClient(
                 new Uri(azureSettings.AzureProjectEndpoint),
@@ -105,13 +106,13 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
 
         if (briefing.Ofsted)
         {
-            sb.AppendLine(ofstedPromptRetriever.GetPrompt());
+            sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted));
             sb.AppendLine();
         }
 
         if (briefing.OfstedSummary)
         {
-            sb.AppendLine(ofstedSummaryPromptRetriever.GetPrompt());
+            sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary));
             sb.AppendLine();
         }
 
@@ -137,7 +138,7 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
             return;
 
         var concernsData = concernsInformationRetriever.GetTrustConcerns();
-        sb.AppendLine(concernsPromptRetriever.GetPrompt());
+        sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.Concerns));
         sb.AppendLine(
             $"Here are concerns related to the trust for this academy in the last 3 years " +
             $"associated with {briefing.AcademyName}: {concernsData}");

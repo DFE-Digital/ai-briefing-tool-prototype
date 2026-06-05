@@ -1,5 +1,6 @@
 ﻿using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
+using BriefingTool.Enums;
 using BriefingTool.Mcp.Factories;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
@@ -16,10 +17,7 @@ using System.Text.Json;
 namespace BriefingTool.Runners;
 
 public class BriefingRunner(ILogger<BriefingRunner> logger,
-    IBasePromptRetriever basePromptRetriever,
-    IConcernsPromptRetriever concernsPromptRetriever,
-    IOfstedPromptRetriever ofstedPromptRetriever,
-    IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever,
+    IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
     IAzureOpenAIService azureOpenAIService,
@@ -38,7 +36,7 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
         var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
         await using var mcpClient = await mcpClientFactory.CreateClientAsync();
         var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "GetSystemPrompt", "BriefingTool");
-        promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
+        promptBuilder.AddSystemMessage(promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool));
 
         var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions(); 
          
@@ -46,11 +44,11 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
         { 
             if (briefing.Ofsted)
             {
-                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt()); 
+                promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted)); 
             }
             if (briefing.OfstedSummary)
             {
-                promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
+                promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary));
             } 
         }
         SetAISearchDataSourceForOfsted(briefing);
@@ -74,7 +72,7 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
         {
             var concernsData = concernsInformationRetriever.GetTrustConcerns();
 
-            promptBuilder.AddUserMessage(concernsPromptRetriever.GetPrompt());
+            promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Concerns));
             promptBuilder.AddUserMessage(
                 @$"Here are concerns related to the trust for this academy in the last 3 years associated with {briefing.AcademyName}: {concernsData}");
         }

@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11415.280 d18.0
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BriefingTool", "BriefingTool.csproj", "{F2F863BF-FF7C-438D-B7D2-963D96506596}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{CC01B66B-2D10-4E12-A1EA-3B898A1F295B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

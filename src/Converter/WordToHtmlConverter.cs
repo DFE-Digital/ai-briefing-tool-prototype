@@ -1,6 +1,5 @@
-﻿using DocumentFormat.OpenXml.Packaging;
-using OpenXmlPowerTools;
-using Markdig;
+﻿using Clippit.Word;
+using DocumentFormat.OpenXml.Packaging; 
 
 namespace BriefingTool.Converter;
 

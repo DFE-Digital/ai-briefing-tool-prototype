@@ -1,6 +1,7 @@
 ﻿using Azure.AI.OpenAI.Chat;
 using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
+using BriefingTool.Enums;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
@@ -13,10 +14,7 @@ using System.Text;
 namespace BriefingTool.Runners;
 
 public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logger,
-    IBasePromptRetriever basePromptRetriever,
-    IConcernsPromptRetriever concernsPromptRetriever,
-    IOfstedPromptRetriever ofstedPromptRetriever,
-    IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever,
+    IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
     IAzureOpenAIService azureOpenAIService,
@@ -34,7 +32,7 @@ public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logg
         logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
 
         var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
-        promptBuilder.AddSystemMessage(basePromptRetriever.GetPrompt());
+        promptBuilder.AddSystemMessage(promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool));
 
         var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions();
 
@@ -57,14 +55,14 @@ public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logg
             {
                 chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
 
-                promptBuilder.AddUserMessage(ofstedPromptRetriever.GetPrompt());
+                promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted));
             }
             if (briefing.OfstedSummary)
             {
                 if (!briefing.Ofsted)
                     chatCompletionOptions.AddDataSource(GetChatDataSource(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint, OfstedIndexName));
 
-                promptBuilder.AddUserMessage(ofstedSummaryPromptRetriever.GetPrompt());
+                promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary));
             }
         }
         SetAISearchDataSourceForOfsted(briefing, chatCompletionOptions, azureSettings);
@@ -88,7 +86,7 @@ public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logg
         {
             var concernsData = concernsInformationRetriever.GetTrustConcerns();
 
-            promptBuilder.AddUserMessage(concernsPromptRetriever.GetPrompt());
+            promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Concerns));
             promptBuilder.AddUserMessage(
                 @$"Here are concerns related to the trust for this academy in the last 3 years associated with {briefing.AcademyName}: {concernsData}");
         }
