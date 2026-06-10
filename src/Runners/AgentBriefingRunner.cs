@@ -31,7 +31,7 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRet
         string instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
 
         AIAgent agent = new AIProjectClient(
-                new Uri(azureSettings.AzureProjectEndpoint),
+                new Uri(azureSettings.AzureProjectEndpoint), 
                 new DefaultAzureCredential())
             .AsAIAgent(
                 model: azureSettings.AzureOpenaiDeployment,
@@ -53,7 +53,7 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRet
         string userMessage = await BuildUserMessageAsync(briefing, establishmentContext);
          
         AgentSession session = await agent.CreateSessionAsync();
-
+        
         try
         {
             AgentResponse response = await agent.RunAsync(userMessage, session);
@@ -146,11 +146,12 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRet
     }
 
     [Experimental("AOAI002")]
-    private static void AppendTemplateSection(BriefingParameters briefing, StringBuilder sb)
+    private void AppendTemplateSection(BriefingParameters briefing, StringBuilder sb)
     {
         if (string.IsNullOrWhiteSpace(briefing.UploadFileContents))
             return;
 
+        sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.Uploads));
         sb.AppendLine(
             "The template content was originally a DOCX file, but I've converted it to HTML. " +
             "Please fill it in and provide the output in Markdown format without any code fences:");

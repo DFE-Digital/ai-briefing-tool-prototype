@@ -14,13 +14,15 @@ public class AzureSearchService : IAzureSearchService
         return new SearchClient(new Uri(azureSettings.AzureSearchEndpoint), indexName, new AzureKeyCredential(azureSettings.AzureSearchKey));
     }
 
-
-    public async Task<string> GetContentAsync(SearchClient searchClient, string query)
+    public async Task<string> GetContentAsync(SearchClient searchClient, string query, int size = 5)
     {
         ArgumentNullException.ThrowIfNull(searchClient);
         ArgumentException.ThrowIfNullOrWhiteSpace(query);
 
-        SearchResults<SearchDocument> results = await searchClient.SearchAsync<SearchDocument>(query);
+        SearchResults<SearchDocument> results = await searchClient.SearchAsync<SearchDocument>(query, new SearchOptions
+        {
+             Size = size
+        });
 
         var context = new StringBuilder();
 

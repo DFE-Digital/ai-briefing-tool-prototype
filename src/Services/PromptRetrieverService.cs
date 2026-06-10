@@ -5,8 +5,6 @@ using BriefingTool.FileRetrievers.Interfaces;
 using BriefingTool.Services.Interfaces;
 
 namespace BriefingTool.Services;
-
-
 public class PromptRetrieverService(IPromptFileReader fileReader, PromptConfig promptConfiguration, ILogger<PromptRetrieverService> logger) : IPromptRetrieverService
 {
     public string GetSystemPrompt(SystemPromptType promptType) =>
@@ -50,6 +48,7 @@ public class PromptRetrieverService(IPromptFileReader fileReader, PromptConfig p
         UserPromptType.OfstedSummary => UserPromptType.OfstedSummary.GetDescription(),
         UserPromptType.OverallSummary => UserPromptType.OverallSummary.GetDescription(),
         UserPromptType.Concerns => UserPromptType.Concerns.GetDescription(),
+        UserPromptType.Uploads => UserPromptType.Uploads.GetDescription(),
         _ => "You are a general-purpose user prompt."
     };
 }

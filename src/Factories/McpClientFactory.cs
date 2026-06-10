@@ -1,11 +1,11 @@
 ﻿using BriefingTool.Config;
-using BriefingTool.Services.Interfaces; 
+using BriefingTool.Services.Interfaces;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
-using OpenAI.Chat; 
+using OpenAI.Chat;
 using System.Net.Http.Headers;
 
-namespace BriefingTool.Mcp.Factories;
+namespace BriefingTool.Factories;
 
 public interface IMcpClientFactory
 {
@@ -17,9 +17,6 @@ public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tok
 {
     public async Task<McpClient> CreateClientAsync(CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Creating MCP client for {Endpoint}", mcpClientConfig.Endpoint);
-
-        // Acquire token manually — ClientOAuthOptions is for interactive flows only
         var token = await tokenService.GetAccessTokenAsync();
 
         var httpClient = new HttpClient();
@@ -43,6 +40,9 @@ public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tok
                 },
                 ProtocolVersion = mcpClientConfig.ProtocolVersion,
                 Capabilities = new ClientCapabilities()
+                {
+                     
+                }
             },
             cancellationToken: cancellationToken);
 
@@ -76,11 +76,13 @@ public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tok
         }
     }
 
-
+    /// <summary>
+    /// Build a JSON schema object for the function parameters. MCP tools carry their inputSchema as a JsonElement.
+    /// </summary>
+    /// <param name="mcpTool"></param>
+    /// <returns></returns>
     public ChatTool ConvertToChatTool(McpClientTool mcpTool)
     {
-        // Build a JSON schema object for the function parameters.
-        // MCP tools carry their inputSchema as a JsonElement.
         var schemaJson = mcpTool.JsonSchema.ToString(); 
 
         return ChatTool.CreateFunctionTool(

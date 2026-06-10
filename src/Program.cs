@@ -3,11 +3,9 @@ using BriefingTool.Builders;
 using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
 using BriefingTool.Constants;
+using BriefingTool.Factories;
 using BriefingTool.FileRetrievers;
 using BriefingTool.FileRetrievers.Interfaces;
-using BriefingTool.Indexers;
-using BriefingTool.Indexers.Interfaces;
-using BriefingTool.Mcp.Factories;
 using BriefingTool.Retrievers;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners;
@@ -16,7 +14,6 @@ using BriefingTool.Services;
 using BriefingTool.Services.Interfaces;
 using GovUk.Frontend.AspNetCore;
 using Microsoft.AspNetCore.HttpOverrides;
-using ReverseMarkdown;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,9 +26,9 @@ builder.Services.AddScoped<IAcademyInformationRetriever, AcademyInformationRetri
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
 builder.Services.AddScoped<IAzureSearchService, AzureSearchService>(); 
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
-builder.Services.AddKeyedScoped<IBriefingRunner, BriefingRunner>(RunnerServiceType.Mcp);
+builder.Services.AddKeyedScoped<IBriefingRunner, McpBriefingRunner>(RunnerServiceType.Mcp);
 builder.Services.AddKeyedScoped<IBriefingRunner, AgentBriefingRunner>(RunnerServiceType.Agent);
-builder.Services.AddKeyedScoped<IBriefingRunner, AgentAssistantBriefingRunner>(RunnerServiceType.AgentAssistant);
+builder.Services.AddKeyedScoped<IBriefingRunner, FoundryHostedAgentBriefingRunner>(RunnerServiceType.FoundryHostedAgent);
 builder.Services.AddKeyedScoped<IBriefingRunner, SingleSourceBriefingRunner>(RunnerServiceType.SingleDataSource);
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
@@ -58,6 +55,10 @@ builder.Services.AddSingleton(mcpClientConfig);
 var azureAdConfig = builder.Configuration.GetSection("Mcp:AzureAd").Get<AzureAdConfig>()
     ?? throw new InvalidOperationException("Mcp Azure AD section is missing!");
 builder.Services.AddSingleton(azureAdConfig);
+
+var foundryHostedAgentConfig = builder.Configuration.GetSection("FoundryHostedAgent").Get<FoundryHostedAgentConfig>()
+    ?? throw new InvalidOperationException("Foundry Hosted Agent section is missing!");
+builder.Services.AddSingleton(foundryHostedAgentConfig);
 
 var promptFiles = builder.Configuration.GetSection("PromptFiles").Get<PromptConfig>()
             ?? throw new InvalidOperationException("Prompt files section is missing!"); 

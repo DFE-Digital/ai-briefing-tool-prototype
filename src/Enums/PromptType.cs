@@ -19,5 +19,7 @@ public enum UserPromptType
     [Description("You are summerising Ofsted summary.")]
     OfstedSummary,
     [Description("You are summerising overall summary.")]
-    OverallSummary
+    OverallSummary,
+    [Description("You are summerising overall summary.")]
+    Uploads
 }

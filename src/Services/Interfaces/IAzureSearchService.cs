@@ -6,6 +6,6 @@ namespace BriefingTool.Services.Interfaces
     public interface IAzureSearchService
     {
         SearchClient CreateSearchClient(AzureSettings azureSettings, string indexName);
-        Task<string> GetContentAsync(SearchClient searchClient, string query);
+        Task<string> GetContentAsync(SearchClient searchClient, string query, int size = 5);
     }
 }

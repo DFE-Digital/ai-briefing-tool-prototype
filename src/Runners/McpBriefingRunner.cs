@@ -1,7 +1,7 @@
 ﻿using BriefingTool.Builders.Interfaces;
 using BriefingTool.Config;
 using BriefingTool.Enums;
-using BriefingTool.Mcp.Factories;
+using BriefingTool.Factories;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
@@ -16,7 +16,7 @@ using System.Text.Json;
 
 namespace BriefingTool.Runners;
 
-public class BriefingRunner(ILogger<BriefingRunner> logger,
+public class McpBriefingRunner(ILogger<McpBriefingRunner> logger,
     IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
     AzureSettings azureSettings,
@@ -86,6 +86,7 @@ public class BriefingRunner(ILogger<BriefingRunner> logger,
     {
         if (!string.IsNullOrWhiteSpace(briefing.UploadFileContents))
         {
+            promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Uploads));
             //Cheating - adding the raw ofsted to data to fill in some of this information 
             promptBuilder.AddUserMessage($"The template content was originally a DOCX file, but I’ve converted it to HTML. Please fill it in and provide the output in Markdown format without any code fences: {briefing.UploadFileContents}");
         }
