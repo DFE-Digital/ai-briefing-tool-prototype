@@ -3,12 +3,14 @@ using Azure.Identity;
 using Azure.Search.Documents;
 using BriefingTool.Config;
 using BriefingTool.Enums;
+using BriefingTool.Factories;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
 using BriefingTool.Services.Interfaces;
 using Markdig;
 using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
@@ -16,13 +18,18 @@ namespace BriefingTool.Runners;
 
 public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
-    AzureSettings azureSettings, IAzureSearchService azureSearchService) : IBriefingRunner
+    AzureSettings azureSettings, IAzureSearchService azureSearchService,
+    IMcpClientFactory mcpClientFactory) : IBriefingRunner
 {
     private const string OfstedIndexName = "ofstedindex";
 
     [Experimental("AOAI002")]
     public async Task<AIResult> GetBriefing(BriefingParameters briefing)
     {
+        await using var mcpClient = await mcpClientFactory.CreateClientAsync(true);
+        var mcpTools = await mcpClient.ListToolsAsync();
+
+
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1);
 
@@ -31,26 +38,17 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRet
         string instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
 
         AIAgent agent = new AIProjectClient(
-                new Uri(azureSettings.AzureProjectEndpoint), 
+                new Uri(azureSettings.AzureProjectEndpoint),
                 new DefaultAzureCredential())
             .AsAIAgent(
                 model: azureSettings.AzureOpenaiDeployment,
                 name: "BriefingAgent",
+                tools: [.. mcpTools.Cast<AITool>()],
                 instructions: instruction);
 
-        logger.LogInformation("Agent created via AIProjectClient.AsAIAgent()");
+        logger.LogInformation("Agent created via AIProjectClient.AsAIAgent()"); 
          
-        SearchClient establishmentSearchClient = azureSearchService.CreateSearchClient(
-            azureSettings,
-            azureSettings.AzureSearchIndex);
-
-        string? establishmentContext = await azureSearchService.GetContentAsync(
-            establishmentSearchClient,
-            briefing.AcademyName);
-
-        logger.LogInformation("Establishment context retrieved via AI Search.");
-         
-        string userMessage = await BuildUserMessageAsync(briefing, establishmentContext);
+        string userMessage = await BuildUserMessageAsync(briefing);
          
         AgentSession session = await agent.CreateSessionAsync();
         
@@ -75,16 +73,9 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRet
     }
      
     [Experimental("AOAI002")]
-    private async Task<string> BuildUserMessageAsync(BriefingParameters briefing, string? establishmentContext)
+    private async Task<string> BuildUserMessageAsync(BriefingParameters briefing)
     {
         var sb = new StringBuilder();
-
-        if (!string.IsNullOrWhiteSpace(establishmentContext))
-        {
-            sb.AppendLine("Establishment, school or academy information retrieved:");
-            sb.AppendLine(establishmentContext);
-            sb.AppendLine();
-        }
 
         await AppendOfstedSectionAsync(briefing, sb);
         AppendConcernsSection(briefing, sb);

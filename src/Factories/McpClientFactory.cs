@@ -9,23 +9,32 @@ namespace BriefingTool.Factories;
 
 public interface IMcpClientFactory
 {
-    Task<McpClient> CreateClientAsync(CancellationToken cancellationToken = default);
+    Task<McpClient> CreateClientAsync(bool IsApiKeyBasedAuthenticaation = false, CancellationToken cancellationToken = default);
     ChatTool ConvertToChatTool(McpClientTool mcpTool);
     Task<string?> GetPromptAsync(McpClient mcpClient, string promptName, string promptType);
 }
-public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tokenService, ILogger<McpClientFactory> logger) : IMcpClientFactory
+public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tokenService, ILogger<McpClientFactory> logger, AzureSettings azureSettings) : IMcpClientFactory
 {
-    public async Task<McpClient> CreateClientAsync(CancellationToken cancellationToken = default)
+    private async Task<HttpClient> CreateHttpClientAsync(bool IsApiKeyBasedAuthenticaation = false)
     {
-        var token = await tokenService.GetAccessTokenAsync();
-
         var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", token);
+        if (IsApiKeyBasedAuthenticaation)
+        {
+            httpClient.DefaultRequestHeaders.Remove("api-key");
+            httpClient.DefaultRequestHeaders.Add("api-key", azureSettings.AzureSearchKey);
+        }
+        else
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await tokenService.GetAccessTokenAsync());
+
+        return httpClient;
+    }
+    public async Task<McpClient> CreateClientAsync(bool IsApiKeyBasedAuthenticaation = false, CancellationToken cancellationToken = default)
+    { 
+        var httpClient = await CreateHttpClientAsync(IsApiKeyBasedAuthenticaation);
 
         var transport = new HttpClientTransport(new HttpClientTransportOptions
         {
-            Endpoint = new Uri(mcpClientConfig.Endpoint),
+            Endpoint = new Uri(IsApiKeyBasedAuthenticaation? mcpClientConfig.FoundryIqMcpEndpoint :  mcpClientConfig.Endpoint),
             TransportMode = mcpClientConfig.TransportMode, 
         }, httpClient);
 
@@ -40,15 +49,12 @@ public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tok
                 },
                 ProtocolVersion = mcpClientConfig.ProtocolVersion,
                 Capabilities = new ClientCapabilities()
-                {
-                     
-                }
             },
             cancellationToken: cancellationToken);
 
         logger.LogInformation("MCP client created successfully");
         return client;
-    }
+    } 
 
     public async Task<string?> GetPromptAsync(McpClient mcpClient, string promptName, string promptType)
     {

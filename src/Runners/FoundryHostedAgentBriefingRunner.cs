@@ -30,7 +30,7 @@ public class FoundryHostedAgentBriefingRunner(
         try
         {
             AIProjectClient projectClient = new(
-                endpoint: new Uri(azureSettings.AzureProjectEndpoint),
+                endpoint: new Uri(azureSettings.AzureProjectEndpoint), 
                 tokenProvider: new DefaultAzureCredential());
 
             AgentReference agentReference = new(
