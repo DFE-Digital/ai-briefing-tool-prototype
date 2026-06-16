@@ -36,7 +36,7 @@ public class McpBriefingRunner(ILogger<McpBriefingRunner> logger,
         var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
         await using var mcpClient = await mcpClientFactory.CreateClientAsync();
         var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "GetSystemPrompt", "BriefingTool");
-        promptBuilder.AddSystemMessage(promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool));
+        promptBuilder.AddSystemMessage(systemMessage!);
 
         var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions(); 
          
