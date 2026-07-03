@@ -189,27 +189,54 @@ public class McpBriefingRunner(ILogger<McpBriefingRunner> logger,
     {
         using var doc = JsonDocument.Parse(rawJson);
         var root = doc.RootElement;
-        var totalCount = root.GetProperty("TotalCount").GetInt32();
+        var totalCount = root.GetProperty("totalCount").GetInt32();
+        var resultElement = root.GetProperty("results");
 
-        var filtered = root
-            .GetProperty("Results")
+        var result = resultElement.ValueKind switch
+        {
+            JsonValueKind.Array => BuildArrayResponse(resultElement, totalCount, minScore, limit),
+            _ => BuildPassthroughResponse(resultElement, totalCount)
+        };
+
+        return JsonSerializer.Serialize(result);
+    }
+
+    private static object BuildArrayResponse(JsonElement resultArray, int totalCount, double minScore, int limit)
+    {
+        var filtered = resultArray
             .EnumerateArray()
-            .Where(item =>
-                item.TryGetProperty("Score", out var score) &&
-                score.TryGetDouble(out var value) &&
-                value > minScore)
+            .Where(item => PassesScoreFilter(item, minScore))
             .Take(limit)
-            .Select(item => item.GetRawText())
             .ToList();
 
-        var result = new
+        return new
         {
             TotalCount = totalCount,
             Showing = filtered.Count,
             HasMore = totalCount > limit,
-            Results = filtered.Select(r => JsonSerializer.Deserialize<JsonElement>(r))
+            Results = filtered
         };
+    }
 
-        return JsonSerializer.Serialize(result);
+    private static object BuildPassthroughResponse(JsonElement resultElement, int totalCount)
+    {
+        return new
+        {
+            TotalCount = totalCount,
+            Showing = 1,
+            HasMore = false,
+            Results = resultElement
+        };
+    }
+
+    private static bool PassesScoreFilter(JsonElement item, double minScore)
+    {
+        if (item.ValueKind != JsonValueKind.Object|| !item.TryGetProperty("Score", out var score))
+            return true;
+
+        if (!score.TryGetDouble(out var value))
+            return false;
+
+        return value > minScore;
     }
 }
