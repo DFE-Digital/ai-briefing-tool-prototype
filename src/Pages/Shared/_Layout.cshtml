@@ -1,11 +1,13 @@
-﻿@{
-    var projectTitle = "Drafting tool";
+﻿@using BriefingTool.Models
+@{
+    var projectTitle = "Briefing tool";
     var inputTitle = ViewData["Title"];
+    var currentTab = (TabNavigationModel?)ViewData[TabNavigationModel.ViewDataKey];
     var title = inputTitle?.ToString() != null && string.IsNullOrEmpty(inputTitle.ToString()) ? $"{inputTitle} - {projectTitle}" : projectTitle;
 }
 
 <!DOCTYPE html>
-<html class="govuk-template" lang="en">
+<html lang="en" class="govuk-template govuk-template--rebranded">
 <head>
 
     <meta charset="utf-8" />
@@ -15,8 +17,8 @@
     <meta name="robots" content="noindex, nofollow">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="/dist/assets/images/favicon.ico" type="image/x-icon">
-    <link rel="mask-icon" href="/dist/assets/images/govuk-mask-icon.svg" color="#0b0c0c">
+    <link rel="shortcut icon" sizes="16x16 32x32 48x48" href="/assets/rebrand/images/favicon.ico" type="image/x-icon">
+    <link rel="mask-icon" href="/assets/rebrand/images/govuk-icon-mask.svg" color="#0b0c0c">
     <link rel="apple-touch-icon" sizes="180x180" href="/dist/assets/images/govuk-apple-touch-icon-180x180.png">
     <link rel="apple-touch-icon" sizes="167x167" href="/dist/assets/images/govuk-apple-touch-icon-167x167.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/dist/assets/images/govuk-apple-touch-icon-152x152.png">
@@ -29,26 +31,20 @@
 <body class="govuk-template__body">
 
     <script asp-add-nonce>
-        document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');
+            document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');
     </script>
+    <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
 
-    <script src="~/dist/jquery.min.js" asp-add-nonce></script>
 
-
-    <a href="#main-content" class="govuk-skip-link">Skip to main content</a>
-
-    @await Html.PartialAsync("_Header")
+    @await Html.PartialAsync("_Header", currentTab)
 
     @await RenderSectionAsync("AfterHeader", required: false)
-
     @await RenderSectionAsync("BeforeMainFullWidth", required: false)
 
-    <div class="dfe-width-container">
+    <div class="govuk-width-container">
         @await RenderSectionAsync("BeforeMain", required: false)
-    </div>
 
-    <div class="dfe-width-container govuk-main-wrapper">
-        <main id="main-content" role="main" class="dfe-width-container">
+        <main id="main-content" role="main" class="govuk-main-wrapper">
             <div class="govuk-grid-row">
                 <div class="govuk-grid-column-full">
                     @RenderBody()
@@ -59,6 +55,5 @@
     <partial name="_Footer" />
     <script src="~/dist/accessible-autocomplete.min.js" asp-add-nonce></script>
     <script src="~/dist/site.js" asp-add-nonce></script>
-    <script src="~/dist/dfefrontend.min.js" asp-add-nonce></script>
-</body>
+</body> 
 </html>

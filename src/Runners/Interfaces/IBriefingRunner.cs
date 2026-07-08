@@ -6,3 +6,7 @@ public interface IBriefingRunner
 {
     Task<AIResult> GetBriefing(BriefingParameters briefing);
 }
+public interface IDatabricksQueryBriefingRunner
+{
+    Task<AIResult> GetBriefing(DatabricksQueryBriefingParameters briefing);
+}

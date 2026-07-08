@@ -27,6 +27,7 @@ builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRet
 builder.Services.AddScoped<IAzureSearchService, AzureSearchService>(); 
 builder.Services.AddScoped<IConcernsInformationRetriever, ConcernsInformationRetriever>();
 builder.Services.AddKeyedScoped<IBriefingRunner, McpBriefingRunner>(RunnerServiceType.Mcp);
+builder.Services.AddScoped<IDatabricksQueryBriefingRunner, DatabricksQueryBriefingRunner>();
 builder.Services.AddKeyedScoped<IBriefingRunner, AgentBriefingRunner>(RunnerServiceType.Agent);
 builder.Services.AddKeyedScoped<IBriefingRunner, FoundryHostedAgentBriefingRunner>(RunnerServiceType.FoundryHostedAgent);
 builder.Services.AddKeyedScoped<IBriefingRunner, SingleSourceBriefingRunner>(RunnerServiceType.SingleDataSource);

@@ -1,34 +1,41 @@
-﻿@{
-    
+﻿@using BriefingTool.Constants
+@using BriefingTool.Models
+@model TabNavigationModel?
+@{
+    const string currentTabStyling = "govuk-service-navigation__item--active";
+    string IsCurrentTab(string tabName) => Model?.CurrentTab == tabName ? currentTabStyling : "";
 }
 
-<header class="dfe-header" role="banner">
-    <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
-    <div class="dfe-width-container dfe-header__container">
-        <div class="dfe-header__logo">
-            <a class="dfe-header__link dfe-header__link--service " href="/">
-                <img src="~/dist/assets/dfe-logo.png" class="dfe-logo" alt="Department for Education">
-                <img src="~/dist/assets/dfe-logo-alt.png" class="dfe-logo-hover" alt="Department for Education">
+<header class="govuk-header" data-module="govuk-header">
+    <div class="govuk-header__container govuk-width-container">
+        <div class="govuk-header__logo">
+            <a href="/" class="govuk-header__link govuk-header__link--homepage">
+                <img src="/assets/images/department-for-education_white.png" alt="Department for Education" class="govuk-header__logotype">
             </a>
-        </div>
+        </div> 
     </div>
-    <div class="dfe-width-container dfe-header__service-name" href="/">
-        <a href="/" class="dfe-header__link--service">Draft Briefing or Submission tool</a>
-    </div>
-    <nav class="dfe-header__navigation" id="header-navigation" role="navigation" aria-label="Primary navigation"
-         aria-labelledby="label-navigation">
-        <div class="dfe-width-container">
-            <p class="dfe-header__navigation-title">
-                <span id="label-navigation">Menu</span>
-                <button class="dfe-header__navigation-close" id="close-menu">
-                    <svg class="dfe-icon dfe-icon__close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                         aria-hidden="true" focusable="false" width="27" height="27">
-                        <path d="M13.41 12l5.3-5.29a1 1 0 1 0-1.42-1.42L12 10.59l-5.29-5.3a1 1 0 0 0-1.42 1.42l5.3 5.29-5.3 5.29a1 1 0 0 0 0 1.42 1 1 0 0 0 1.42 0l5.29-5.3 5.29 5.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z">
-                        </path>
-                    </svg>
-                    <span class="govuk-visually-hidden">Close menu</span>
-                </button>
-            </p>
-        </div>
-    </nav>
 </header>
+<section aria-label="Service information" class="govuk-service-navigation"
+         data-module="govuk-service-navigation">
+    <div class="govuk-width-container">
+        <div class="govuk-service-navigation__container">
+            <span class="govuk-service-navigation__service-name">
+                <a href="/" class="govuk-service-navigation__link">
+                    Main
+                </a>
+            </span>
+            <nav aria-label="Menu" class="govuk-service-navigation__wrapper" id="header-navigation">
+                <button type="button" class="govuk-service-navigation__toggle govuk-js-service-navigation-toggle" aria-controls="navigation" hidden>
+                    Menu
+                </button>
+                <ul class="govuk-service-navigation__list" id="navigation"> 
+                    <li class="govuk-service-navigation__item @IsCurrentTab(TabNavigationModel.DatabricksQuery)">
+                        <a class="govuk-service-navigation__link" href="@RouteConstants.DatabricksQuery">
+                            Databricks Query
+                        </a>
+                    </li> 
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>

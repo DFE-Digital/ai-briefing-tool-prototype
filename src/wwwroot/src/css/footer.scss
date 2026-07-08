@@ -1,0 +1,62 @@
+// GOV.UK Footer refreshed brand styling
+// Based on GOV.UK Design System v5.10.0+ guidelines
+
+.govuk-footer {
+  // Updated background color to light blue
+  background-color: #f3f2f1; // Light blue background
+  
+  // Add thick blue top border
+  border-top: 4px solid #1d70b8; // Thick blue border
+  
+  // Ensure proper spacing
+  padding-top: govuk-spacing(6);
+  
+  // Crown logo styling
+  .govuk-footer__crown {
+    margin-bottom: govuk-spacing(4);
+    fill: #0b0c0c; // Dark color for crown
+  }
+  
+  // Ensure proper meta section styling
+  .govuk-footer__meta {
+    padding-top: govuk-spacing(4);
+  }
+  
+  // License logo styling
+  .govuk-footer__licence-logo {
+    margin-right: govuk-spacing(2);
+    fill: #0b0c0c;
+  }
+  
+  // Copyright styling
+  .govuk-footer__licence-description {
+    color: #0b0c0c;
+  }
+  
+}
+
+// Copyright logo styling - fix the image path
+// Use a more specific selector to override GOV.UK Design System
+.govuk-footer .govuk-footer__meta .govuk-footer__copyright-logo::before {
+  content: "" !important;
+  display: block !important;
+  width: 100% !important;
+  padding-top: 112px !important;
+  background-image: url(./assets/images/govuk-crest.svg) !important;
+  background-repeat: no-repeat !important;
+  background-position: 50% 0% !important;
+  background-size: 125px 102px !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  background-color: currentcolor !important;
+  -webkit-mask-image: url(./assets/images/govuk-crest.svg) !important;
+  mask-image: url(./assets/images/govuk-crest.svg) !important;
+  -webkit-mask-repeat: no-repeat !important;
+  mask-repeat: no-repeat !important;
+  -webkit-mask-position: 50% 0% !important;
+  mask-position: 50% 0% !important;
+  -webkit-mask-size: 125px 102px !important;
+  mask-size: 125px 102px !important;
+}
+
+
