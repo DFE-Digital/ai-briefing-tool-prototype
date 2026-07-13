@@ -32,6 +32,7 @@ public class SingleSourceBriefingRunner(ILogger<SingleSourceBriefingRunner> logg
         logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
 
         var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
+        string deploymentName = azureSettings.AzureOpenaiDeployment;
         promptBuilder.AddSystemMessage(promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool));
 
         var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions();

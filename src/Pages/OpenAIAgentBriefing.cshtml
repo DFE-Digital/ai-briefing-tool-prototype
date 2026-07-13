@@ -1,0 +1,90 @@
+﻿@page "/openai-agent"
+@using Microsoft.AspNetCore.Html
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+
+    const string academyName = nameof(Model.AcademyName);
+    const string ofsted = nameof(Model.Ofsted); 
+    const string ofstedSummary = nameof(Model.OfstedSummary);
+    const string additional = nameof(Model.AdditionalPrompt);  
+    const string concerns = nameof(Model.Concerns);
+    const string uploadfile = nameof(Model.UploadFile);
+    var ResultHtml = new HtmlString(@Model.Result);
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third">
+        <form method="post" enctype="multipart/form-data">
+            <partial name="Shared/_ValidationSummary" />
+            <h1 class="govuk-heading-l">Create briefing</h1>
+            <div class="govuk-form-group">
+                <govuk-input name="@academyName" for="@Model.AcademyName" spellcheck="false">
+                    <govuk-input-label is-page-heading="false" class="govuk-label--m">School or trust name</govuk-input-label>
+                </govuk-input>
+            </div>
+            <div class="govuk-form-group">
+                <govuk-checkboxes name="options">
+                    <govuk-checkboxes-fieldset>
+                        <govuk-checkboxes-fieldset-legend is-page-heading="true" class="govuk-fieldset__legend--m">
+                            Information to include
+                        </govuk-checkboxes-fieldset-legend>
+                        <govuk-checkboxes-item asp-for="@Model.Ofsted" name="@ofsted" value="true" checked="@Model.Ofsted">
+                            <b>Ofsted</b>
+                        </govuk-checkboxes-item>
+                        <govuk-checkboxes-item asp-for="@Model.OfstedSummary" name="@ofstedSummary" value="true" checked="@Model.OfstedSummary">
+                            <b>Ofsted Summary</b>
+                        </govuk-checkboxes-item>
+                        <govuk-checkboxes-item asp-for="@Model.Concerns" name="@concerns" value="true" checked="@Model.Concerns">
+                            <b>Concerns</b>
+                        </govuk-checkboxes-item>
+                        <govuk-checkboxes-item asp-for="@Model.Financial" value="true" disabled="true" checked="@Model.Financial">
+                            <b>Financial performance</b>
+                        </govuk-checkboxes-item>
+                    </govuk-checkboxes-fieldset>
+                </govuk-checkboxes>
+            </div> 
+
+            <div class="govuk-form-group">
+                <govuk-textarea name="@additional" for="@Model.AdditionalPrompt">
+                    <govuk-textarea-label class="govuk-label--m" is-page-heading="true">
+                        Extra instructions (optional)
+                    </govuk-textarea-label>
+                    <govuk-textarea-hint>
+                        You can add more details about the briefing you want to be created
+                    </govuk-textarea-hint>
+                </govuk-textarea>
+            </div>
+            <h3 class="govuk-label govuk-label--m">
+                Base my content on an existing template
+            </h3>
+            <div class="govuk-form-group">
+                <govuk-file-upload name="@uploadfile" javascript="true">
+                    <govuk-file-upload-label>By uploading an empty brief, submission or report template, this tool can try to create the content you usually include.</govuk-file-upload-label>
+                    <govuk-file-upload-hint>Templates must be in Word document format</govuk-file-upload-hint>
+                </govuk-file-upload>
+            </div>
+            <govuk-button type="submit">Continue</govuk-button>
+        </form>
+    </div>
+    <div class="govuk-grid-column-two-thirds">
+
+        <div class="govuk-body" id="textToCopy">@ResultHtml</div>
+        @if (Model.DebugOutput)
+        {
+            <hr/>
+            <div class="govuk-body">@Model.DebugPrompt</div>
+        }
+    </div>
+</div>
+
+<script>
+    function copyText() {
+        const text = document.getElementById("textToCopy").value;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied: " + text);
+        }).catch(err => {
+            console.error("Failed to copy: ", err);
+        });
+    }
+</script>

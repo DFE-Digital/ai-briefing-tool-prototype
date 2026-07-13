@@ -30,6 +30,7 @@ builder.Services.AddKeyedScoped<IBriefingRunner, McpBriefingRunner>(RunnerServic
 builder.Services.AddScoped<IDatabricksQueryBriefingRunner, DatabricksQueryBriefingRunner>();
 builder.Services.AddKeyedScoped<IBriefingRunner, AgentBriefingRunner>(RunnerServiceType.Agent);
 builder.Services.AddKeyedScoped<IBriefingRunner, FoundryHostedAgentBriefingRunner>(RunnerServiceType.FoundryHostedAgent);
+builder.Services.AddScoped<IOpenAIAgentBriefingRunner, OpenAIAgentBriefingRunner>();
 builder.Services.AddKeyedScoped<IBriefingRunner, SingleSourceBriefingRunner>(RunnerServiceType.SingleDataSource);
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
