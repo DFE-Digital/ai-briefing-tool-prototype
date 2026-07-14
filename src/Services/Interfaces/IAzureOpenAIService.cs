@@ -31,9 +31,8 @@ public interface IAzureOpenAIService
     /// </summary>
     /// <param name="azureOpenaiKey">A key of Azure Open AI.</param>
     /// <param name="azureOpenaiEndpoint">An endpoint of Azure Open AI.</param>
-    /// <param name="excludeAzureOpenAIClientOptions">Exclude Azure Open AI client options (By default false).</param>
     /// <returns></returns>
-    AzureOpenAIClient InitialiseAzureOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint, bool excludeAzureOpenAIClientOptions = false);
+    AzureOpenAIClient InitialiseAzureOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint);
 
     OpenAIClient InitialiseOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint);
 

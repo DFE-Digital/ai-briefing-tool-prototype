@@ -74,7 +74,7 @@ public class OpenAIAgentBriefingModel(ILogger<OpenAIAgentBriefingModel> logger, 
             fileContents = await ConvertFile(UploadFile);
         } 
 
-        var output = await openAiBriefingRunner.GetBriefing(new BriefingParameters(AcademyName ?? "", Ofsted,OfstedSummary, Concerns, Financial, AdditionalPrompt, fileContents));
+        var output = await openAiBriefingRunner.GetBriefing(new OpenAiBriefingParameters(AcademyName ?? "", Ofsted,OfstedSummary, Concerns, Financial, AdditionalPrompt, fileContents));
 
         Result = output.Output;
         DebugPrompt = output.Debug;

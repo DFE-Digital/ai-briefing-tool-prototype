@@ -23,7 +23,7 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
     private const string OfstedIndexName = "ofstedindex";
 
     [Experimental("AOAI002")]
-    public async Task<AIResult> GetBriefing(BriefingParameters briefing)
+    public async Task<AIResult> GetBriefing(OpenAiBriefingParameters briefing)
     {
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1);
@@ -71,7 +71,7 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
     }
      
     [Experimental("AOAI002")]
-    private async Task<string> BuildUserMessageAsync(BriefingParameters briefing)
+    private async Task<string> BuildUserMessageAsync(OpenAiBriefingParameters briefing)
     {
         var sb = new StringBuilder();
 
@@ -88,7 +88,7 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
     }
 
     [Experimental("AOAI002")]
-    private async Task AppendOfstedSectionAsync(BriefingParameters briefing, StringBuilder sb)
+    private async Task AppendOfstedSectionAsync(OpenAiBriefingParameters briefing, StringBuilder sb)
     {
         if (!briefing.Ofsted && !briefing.OfstedSummary)
             return;
@@ -121,7 +121,7 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
     }
 
     [Experimental("AOAI002")]
-    private void AppendConcernsSection(BriefingParameters briefing, StringBuilder sb)
+    private void AppendConcernsSection(OpenAiBriefingParameters briefing, StringBuilder sb)
     {
         if (!briefing.Concerns)
             return;
@@ -135,7 +135,7 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
     }
 
     [Experimental("AOAI002")]
-    private void AppendTemplateSection(BriefingParameters briefing, StringBuilder sb)
+    private void AppendTemplateSection(OpenAiBriefingParameters briefing, StringBuilder sb)
     {
         if (string.IsNullOrWhiteSpace(briefing.UploadFileContents))
             return;

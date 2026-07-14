@@ -39,7 +39,6 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPromptFileReader, PromptFileReader>(); 
 builder.Services.AddScoped<IPromptRetrieverService, PromptRetrieverService>();
 
-
 // Configurations
 builder.Services.AddOptions<AuthenticationConfig>();
 var apiKeysConfiguration = builder.Configuration.GetSection("AuthenticationConfig");

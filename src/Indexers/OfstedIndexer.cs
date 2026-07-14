@@ -140,7 +140,7 @@ public class OfstedIndexer(AzureSettings azureSettings, IAzureOpenAIService azur
     /// <param name="outputSampleDocumentPath">The file path where the output with embeddings will be saved.</param>
     private async Task<List<Dictionary<string, object>>> BuildDocumentsAsync()
     {
-        var azureOpenAiClient = azureOpenAIService.InitialiseAzureOpenAIClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, true);
+        var azureOpenAiClient = azureOpenAIService.InitialiseAzureOpenAIClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint);
 
         EmbeddingClient embeddingClient = azureOpenAiClient.GetEmbeddingClient("text-embedding-ada-002");
         var embeddingOptions = new EmbeddingGenerationOptions();

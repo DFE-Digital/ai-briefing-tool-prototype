@@ -8,7 +8,7 @@ public interface IBriefingRunner
 }
 public interface IOpenAIAgentBriefingRunner
 {
-    Task<AIResult> GetBriefing(BriefingParameters briefing);
+    Task<AIResult> GetBriefing(OpenAiBriefingParameters briefing);
 }
 public interface IDatabricksQueryBriefingRunner
 {
