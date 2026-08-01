@@ -2,32 +2,40 @@
 using Azure.Identity;
 using Azure.Search.Documents;
 using BriefingTool.Config;
+using BriefingTool.Enums;
+using BriefingTool.Factories;
 using BriefingTool.Models;
 using BriefingTool.Retrievers.Interfaces;
 using BriefingTool.Runners.Interfaces;
 using BriefingTool.Services.Interfaces;
 using Markdig;
 using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace BriefingTool.Runners;
 
-public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromptRetriever basePromptRetriever, IConcernsPromptRetriever concernsPromptRetriever,
-    IOfstedPromptRetriever ofstedPromptRetriever, IOfstedSummaryPromptRetriever ofstedSummaryPromptRetriever, IConcernsInformationRetriever concernsInformationRetriever,
-    AzureSettings azureSettings, IAzureSearchService azureSearchService) : IBriefingRunner
+public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRetrieverService promptRetrieverService,
+    IConcernsInformationRetriever concernsInformationRetriever,
+    AzureSettings azureSettings, IAzureSearchService azureSearchService,
+    IMcpClientFactory mcpClientFactory) : IBriefingRunner
 {
     private const string OfstedIndexName = "ofstedindex";
 
     [Experimental("AOAI002")]
     public async Task<AIResult> GetBriefing(BriefingParameters briefing)
     {
+        await using var mcpClient = await mcpClientFactory.CreateClientAsync(true);
+        var mcpTools = await mcpClient.ListToolsAsync();
+
+
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1);
 
         logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
 
-        string instruction = basePromptRetriever.GetPrompt();
+        string instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
 
         AIAgent agent = new AIProjectClient(
                 new Uri(azureSettings.AzureProjectEndpoint),
@@ -35,24 +43,15 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
             .AsAIAgent(
                 model: azureSettings.AzureOpenaiDeployment,
                 name: "BriefingAgent",
+                tools: [.. mcpTools.Cast<AITool>()],
                 instructions: instruction);
 
-        logger.LogInformation("Agent created via AIProjectClient.AsAIAgent()");
+        logger.LogInformation("Agent created via AIProjectClient.AsAIAgent()"); 
          
-        SearchClient establishmentSearchClient = azureSearchService.CreateSearchClient(
-            azureSettings,
-            azureSettings.AzureSearchIndex);
-
-        string? establishmentContext = await azureSearchService.GetContentAsync(
-            establishmentSearchClient,
-            briefing.AcademyName);
-
-        logger.LogInformation("Establishment context retrieved via AI Search.");
-         
-        string userMessage = await BuildUserMessageAsync(briefing, establishmentContext);
+        string userMessage = await BuildUserMessageAsync(briefing);
          
         AgentSession session = await agent.CreateSessionAsync();
-
+        
         try
         {
             AgentResponse response = await agent.RunAsync(userMessage, session);
@@ -74,16 +73,9 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
     }
      
     [Experimental("AOAI002")]
-    private async Task<string> BuildUserMessageAsync(BriefingParameters briefing, string? establishmentContext)
+    private async Task<string> BuildUserMessageAsync(BriefingParameters briefing)
     {
         var sb = new StringBuilder();
-
-        if (!string.IsNullOrWhiteSpace(establishmentContext))
-        {
-            sb.AppendLine("Establishment, school or academy information retrieved:");
-            sb.AppendLine(establishmentContext);
-            sb.AppendLine();
-        }
 
         await AppendOfstedSectionAsync(briefing, sb);
         AppendConcernsSection(briefing, sb);
@@ -105,13 +97,13 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
 
         if (briefing.Ofsted)
         {
-            sb.AppendLine(ofstedPromptRetriever.GetPrompt());
+            sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted));
             sb.AppendLine();
         }
 
         if (briefing.OfstedSummary)
         {
-            sb.AppendLine(ofstedSummaryPromptRetriever.GetPrompt());
+            sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary));
             sb.AppendLine();
         }
 
@@ -137,7 +129,7 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
             return;
 
         var concernsData = concernsInformationRetriever.GetTrustConcerns();
-        sb.AppendLine(concernsPromptRetriever.GetPrompt());
+        sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.Concerns));
         sb.AppendLine(
             $"Here are concerns related to the trust for this academy in the last 3 years " +
             $"associated with {briefing.AcademyName}: {concernsData}");
@@ -145,11 +137,12 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IBasePromp
     }
 
     [Experimental("AOAI002")]
-    private static void AppendTemplateSection(BriefingParameters briefing, StringBuilder sb)
+    private void AppendTemplateSection(BriefingParameters briefing, StringBuilder sb)
     {
         if (string.IsNullOrWhiteSpace(briefing.UploadFileContents))
             return;
 
+        sb.AppendLine(promptRetrieverService.GetUserPrompt(UserPromptType.Uploads));
         sb.AppendLine(
             "The template content was originally a DOCX file, but I've converted it to HTML. " +
             "Please fill it in and provide the output in Markdown format without any code fences:");

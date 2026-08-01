@@ -57,6 +57,12 @@ public class IndexModel(ILogger<IndexModel> logger, IServiceProvider serviceProv
     [Display(Name = "Single Data Source")]
     public string? SelectedService { get; set; } = RunnerServiceType.SingleDataSource;
 
+    public IActionResult OnGet()
+    {
+        ViewData[TabNavigationModel.ViewDataKey] = new TabNavigationModel(TabNavigationModel.Main);
+        return Page();
+    }
+        
     [Experimental("AOAI001")]
     public async Task<IActionResult> OnPostAsync()
     {

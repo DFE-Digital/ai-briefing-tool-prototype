@@ -1,0 +1,31 @@
+@page "/databricks-query"
+@using Microsoft.AspNetCore.Html
+@model BriefingModel
+@{
+    ViewData["Title"] = "Create briefing (Databricks)";
+    var ResultHtml = new HtmlString(@Model.Result);
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third">
+        <h1 class="govuk-heading-l">Create briefing</h1>
+        <form method="post">
+            <partial name="Shared/_ValidationSummary" />
+            <div class="govuk-form-group">
+                <govuk-textarea name="@nameof(Model.Prompt)" for="@Model.Prompt">
+                    <govuk-textarea-label class="govuk-label--m" is-page-heading="true">
+                        Enter user prompt
+                    </govuk-textarea-label>
+                    <govuk-textarea-hint>
+                        Enter a user prompt to execute the MCP tool that executes the databricks query.
+                    </govuk-textarea-hint>
+                </govuk-textarea>
+            </div>
+
+            <govuk-button type="submit">Create briefing</govuk-button>
+        </form>
+    </div>
+    <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-body" id="textToCopy">@ResultHtml</div>
+    </div>
+</div>

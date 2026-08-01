@@ -1,0 +1,55 @@
+﻿using BriefingTool.Config;
+using BriefingTool.Enums;
+using BriefingTool.Extensions;
+using BriefingTool.FileRetrievers.Interfaces;
+using BriefingTool.Services.Interfaces;
+
+namespace BriefingTool.Services;
+public class PromptRetrieverService(IPromptFileReader fileReader, PromptConfig promptConfiguration, ILogger<PromptRetrieverService> logger) : IPromptRetrieverService
+{
+    public string GetSystemPrompt(SystemPromptType promptType) =>
+        GetPrompt(promptConfiguration.SystemPrompts, promptType, GetSystemEmbeddedFallback);
+
+    public string GetUserPrompt(UserPromptType promptType) =>
+        GetPrompt(promptConfiguration.UserPrompts, promptType, GetUserEmbeddedFallback);
+
+    private string GetPrompt<TPromptType>(IDictionary<TPromptType, string> prompts, TPromptType promptType, Func<TPromptType, string> fallback) where TPromptType : notnull
+    {
+        if (!prompts.TryGetValue(promptType, out var path))
+        {
+            logger.LogWarning("No prompt configured for type: {PromptType}", promptType);
+            return fallback(promptType);
+        }
+
+        try
+        {
+            return fileReader.Read(path);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to load prompt file for {PromptType}. Using fallback.", promptType);
+            return fallback(promptType);
+        }
+    }
+
+    public string Render(string template, Dictionary<string, string> values)
+        => values.Aggregate(template, (current, kv) =>
+            current.Replace($"{{{kv.Key}}}", kv.Value));
+
+    private static string GetSystemEmbeddedFallback(SystemPromptType type) => type switch
+    {
+        SystemPromptType.BriefingTool => SystemPromptType.BriefingTool.GetDescription(),
+        _ => "You are a general-purpose AI assistant."
+    };
+
+    private static string GetUserEmbeddedFallback(UserPromptType promptType) => promptType switch
+    {
+        UserPromptType.Ofsted => UserPromptType.Ofsted.GetDescription(),
+        UserPromptType.OfstedSummary => UserPromptType.OfstedSummary.GetDescription(),
+        UserPromptType.OverallSummary => UserPromptType.OverallSummary.GetDescription(),
+        UserPromptType.Concerns => UserPromptType.Concerns.GetDescription(),
+        UserPromptType.Uploads => UserPromptType.Uploads.GetDescription(),
+        _ => "You are a general-purpose user prompt."
+    };
+}
+

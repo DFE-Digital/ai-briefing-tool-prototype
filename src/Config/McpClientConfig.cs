@@ -5,6 +5,7 @@ namespace BriefingTool.Config;
 public sealed class McpClientConfig 
 {
     public string Endpoint { get; set; } = string.Empty;
+    public string FoundryIqMcpEndpoint { get; set; } = string.Empty;
     public string Name { get; set; } = "MCP Client";
     public string Version { get; set; } = "1.0.0";
     public string ProtocolVersion { get; set; } = "2025-11-25";

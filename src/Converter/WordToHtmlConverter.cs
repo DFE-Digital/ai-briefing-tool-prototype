@@ -1,11 +1,15 @@
-﻿using DocumentFormat.OpenXml.Packaging;
-using OpenXmlPowerTools;
-using Markdig;
+﻿using Clippit.Word;
+using DocumentFormat.OpenXml.Packaging; 
 
 namespace BriefingTool.Converter;
 
 public static class WordToHtmlConverter
 {
+    /// <summary>
+    /// Converts a DOCX file stream to an HTML string using Open XML SDK and Clippit.Word library.
+    /// </summary>
+    /// <param name="docxStream"></param>
+    /// <returns></returns>
     public static string ConvertDocxToHtml(Stream docxStream)
     {
         using var memoryStream = new MemoryStream();
@@ -16,15 +20,18 @@ public static class WordToHtmlConverter
         {
             PageTitle = "Converted Document"
         };
-
-        // Convert Word → HTML first
+         
         var html = WmlToHtmlConverter.ConvertToHtml(wordDoc, settings);
-
-        // Extract HTML string
+         
         string htmlText = html.ToString();
         return htmlText; 
     }
 
+    /// <summary>
+    /// Converts an HTML string to Markdown format using the ReverseMarkdown library.
+    /// </summary>
+    /// <param name="html"></param>
+    /// <returns></returns>
     public static string HtmlToMarkdown(string html)
     {
         var converter = new ReverseMarkdown.Converter();

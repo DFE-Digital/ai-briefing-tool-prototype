@@ -1,10 +1,6 @@
 ﻿using Azure;
-using Azure.AI.Extensions.OpenAI;
 using Azure.AI.OpenAI;
-using Azure.AI.Projects;
-using Azure.Identity;
 using BriefingTool.Services.Interfaces;
-using Microsoft.Agents.AI;
 using OpenAI;
 using OpenAI.Assistants;
 using OpenAI.Chat;
@@ -30,12 +26,12 @@ public class AzureOpenAIService : IAzureOpenAIService
     }
     public ChatClient GetChatClient(string azureOpenaiKey, string azureOpenaiEndpoint, string azureOpenaiDeployment)
     {
-        AzureOpenAIClient azureClient = InitialiseAzureOpenAIClient(azureOpenaiKey, azureOpenaiEndpoint);
+        var azureClient = InitialiseAzureOpenAIClient(azureOpenaiKey, azureOpenaiEndpoint);
          
         return azureClient.GetChatClient(azureOpenaiDeployment);
     }
 
-    public AzureOpenAIClient InitialiseAzureOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint, bool excludeAzureOpenAIClientOptions = false)
+    public AzureOpenAIClient InitialiseAzureOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint)
     {
         if (string.IsNullOrEmpty(azureOpenaiKey)) 
             throw new ArgumentNullException(nameof(azureOpenaiKey), "OpenAI API Key not found"); 
@@ -46,7 +42,7 @@ public class AzureOpenAIService : IAzureOpenAIService
         if (!Uri.TryCreate(azureOpenaiEndpoint, UriKind.Absolute, out var endpointUri)) 
             throw new ArgumentException("Invalid Azure OpenAI Endpoint URI", nameof(azureOpenaiEndpoint));
 
-        var azureOpenAIClientOptions = excludeAzureOpenAIClientOptions ? null : new AzureOpenAIClientOptions()
+        var azureOpenAIClientOptions = new AzureOpenAIClientOptions()
         {
             MessageLoggingPolicy = new MessageLoggingPolicy(
                 new ClientLoggingOptions()
@@ -92,5 +88,13 @@ public class AzureOpenAIService : IAzureOpenAIService
 
         return agent;
     }
-
+    private static AzureOpenAIClientOptions.ServiceVersion GetServiceVersion(string? apiVersion)
+    {
+        return apiVersion switch
+        {
+            "2024-10-21" => AzureOpenAIClientOptions.ServiceVersion.V2024_10_21,
+            "2024-06-01" => AzureOpenAIClientOptions.ServiceVersion.V2024_06_01,
+            _ => AzureOpenAIClientOptions.ServiceVersion.V2024_10_21
+        };
+    }
 }
