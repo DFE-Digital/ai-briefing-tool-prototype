@@ -7,12 +7,21 @@
 }
 
 <header class="govuk-header" data-module="govuk-header">
-    <div class="govuk-header__container govuk-width-container">
+    <div class="govuk-header__container govuk-width-container" style="position:relative;">
         <div class="govuk-header__logo">
             <a href="/" class="govuk-header__link govuk-header__link--homepage">
                 <img src="/assets/images/department-for-education_white.png" alt="Department for Education" class="govuk-header__logotype">
             </a>
-        </div> 
+        </div>
+
+        <div style="position:absolute; right:0; top:0; height:100%; display:flex; align-items:center;">
+            @if (User?.Identity?.IsAuthenticated ?? false)
+            {
+                <div class="govuk-header__user" style="color:white; padding-right:1rem;">
+                    <span class="govuk-header__user-name">Signed in as <strong>@User.Identity.Name</strong></span>
+                </div>
+            }
+        </div>
     </div>
 </header>
 <section aria-label="Service information" class="govuk-service-navigation"
