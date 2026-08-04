@@ -14,15 +14,7 @@ public class AzureOpenAIService : IAzureOpenAIService
 {
     public ChatCompletionOptions CreateChatCompletionOptions()
     {
-        return new ChatCompletionOptions
-        {
-            Temperature = (float)0.7,
-            MaxOutputTokenCount = 6553,
-
-            TopP = (float)0.95,
-            FrequencyPenalty = 0,
-            PresencePenalty = 0,
-        };
+        return new ChatCompletionOptions();
     }
     public ChatClient GetChatClient(string azureOpenaiKey, string azureOpenaiEndpoint, string azureOpenaiDeployment)
     {

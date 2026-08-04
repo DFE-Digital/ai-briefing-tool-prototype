@@ -17,7 +17,7 @@ namespace BriefingTool.Runners;
 
 public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger, IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
-    AzureSettings azureSettings, IAzureSearchService azureSearchService,
+    AzureFoundryConfig azureFoundryConfig, IAzureSearchService azureSearchService, AzureSearchConfig azureSearchConfig,
     IAzureOpenAIService azureOpenAIService, IMcpClientFactory mcpClientFactory) : IOpenAIAgentBriefingRunner
 {
     private const string OfstedIndexName = "ofstedindex";
@@ -28,16 +28,16 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1);
 
-        await using var mcpClient = await mcpClientFactory.CreateClientAsync(true);
+        await using var mcpClient = await mcpClientFactory.CreateClientAsync();
         var mcpTools = await mcpClient.ListToolsAsync();
 
-        logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
+        logger.LogInformation("OpenAI endpoint: {Endpoint}", azureFoundryConfig.OpenAiEndpoint);
 
         string instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
 
-        var azureOpenAIClient = azureOpenAIService.InitialiseOpenAIClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint);
+        var azureOpenAIClient = azureOpenAIService.InitialiseOpenAIClient(azureFoundryConfig.ApiKey, azureFoundryConfig.OpenAiEndpoint);
         AIAgent agent = azureOpenAIClient
-            .GetChatClient(azureSettings.AzureOpenaiDeployment)
+            .GetChatClient(azureFoundryConfig.DeploymentModel)
             .AsIChatClient()
             .AsAIAgent( 
                 name: "OpenAIBriefingAgent",
@@ -106,7 +106,7 @@ public class OpenAIAgentBriefingRunner(ILogger<OpenAIAgentBriefingRunner> logger
         }
 
         SearchClient ofstedSearchClient = azureSearchService.CreateSearchClient(
-            azureSettings, OfstedIndexName);
+            azureSearchConfig.OfstedIndexName);
 
         string? ofstedContext = await azureSearchService.GetContentAsync(
             ofstedSearchClient, briefing.AcademyName);

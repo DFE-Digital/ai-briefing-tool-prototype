@@ -17,7 +17,7 @@ public class FoundryHostedAgentBriefingRunner(
     ILogger<FoundryHostedAgentBriefingRunner> logger,
     IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
-    AzureSettings azureSettings,
+    AzureFoundryConfig azureFoundryConfig,
     FoundryHostedAgentConfig foundryHostedAgentConfig) : IBriefingRunner
 {
     [Experimental("AOAI001")]
@@ -25,12 +25,12 @@ public class FoundryHostedAgentBriefingRunner(
     {
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1); 
-        logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureProjectEndpoint);
+        logger.LogInformation("Project endpoint: {Endpoint}", azureFoundryConfig.ProjectEndpoint);
 
         try
         {
             AIProjectClient projectClient = new(
-                endpoint: new Uri(azureSettings.AzureProjectEndpoint), 
+                endpoint: new Uri(azureFoundryConfig.ProjectEndpoint), 
                 tokenProvider: new DefaultAzureCredential());
 
             AgentReference agentReference = new(
