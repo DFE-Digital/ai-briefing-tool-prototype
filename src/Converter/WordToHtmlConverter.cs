@@ -1,5 +1,5 @@
-﻿using Clippit.Word;
-using DocumentFormat.OpenXml.Packaging; 
+﻿using DocumentFormat.OpenXml.Packaging;
+using Clippit.Word;
 
 namespace BriefingTool.Converter;
 

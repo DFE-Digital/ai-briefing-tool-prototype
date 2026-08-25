@@ -7,11 +7,11 @@ using System.Text;
 
 namespace BriefingTool.Services;
 
-public class AzureSearchService : IAzureSearchService
+public class AzureSearchService(AzureSearchConfig azureSearchConfig) : IAzureSearchService
 {
-    public SearchClient CreateSearchClient(AzureSettings azureSettings, string indexName)
+    public SearchClient CreateSearchClient(string indexName)
     {
-        return new SearchClient(new Uri(azureSettings.AzureSearchEndpoint), indexName, new AzureKeyCredential(azureSettings.AzureSearchKey));
+        return new SearchClient(new Uri(azureSearchConfig.Endpoint), indexName, new AzureKeyCredential(azureSearchConfig.ApiKey));
     }
 
     public async Task<string> GetContentAsync(SearchClient searchClient, string query, int size = 5)

@@ -9,13 +9,13 @@ using OpenAI.Embeddings;
 using System.Text.Json;
 
 namespace BriefingTool.Indexers;
-public class OfstedIndexer(AzureSettings azureSettings, IAzureOpenAIService azureOpenAIService) : IOfstedIndexer
+public class OfstedIndexer(AzureSearchConfig azureSearchConfig, FauAPIConfig fauAPIConfig, IAzureOpenAIService azureOpenAIService) : IOfstedIndexer
 {
     private const string OfstedIndexName = "ofstedindex";
 
     public async Task CreateIndex()
     {
-        var indexClient = InitializeSearchIndexClient(azureSettings.AzureSearchKey, azureSettings.AzureSearchEndpoint);
+        var indexClient = InitializeSearchIndexClient(azureSearchConfig.ApiKey, azureSearchConfig.Endpoint);
         var searchClient = indexClient.GetSearchClient(OfstedIndexName);
 
         await SetupIndexAsync(indexClient);
@@ -68,7 +68,7 @@ public class OfstedIndexer(AzureSettings azureSettings, IAzureOpenAIService azur
                     {
                         Parameters = new AzureOpenAIVectorizerParameters
                         {
-                            ResourceUri = new Uri(azureSettings.AzureOpenaiEndpoint),
+                            ResourceUri = new Uri(fauAPIConfig.OpenAiEndpoint),
                             ModelName = "text-embedding-ada-002",
                             DeploymentName = "text-embedding-ada-002"
                         }
@@ -140,7 +140,7 @@ public class OfstedIndexer(AzureSettings azureSettings, IAzureOpenAIService azur
     /// <param name="outputSampleDocumentPath">The file path where the output with embeddings will be saved.</param>
     private async Task<List<Dictionary<string, object>>> BuildDocumentsAsync()
     {
-        var azureOpenAiClient = azureOpenAIService.InitialiseAzureOpenAIClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint);
+        var azureOpenAiClient = azureOpenAIService.InitialiseAzureOpenAIClient(fauAPIConfig.ApiKey, fauAPIConfig.OpenAiEndpoint);
 
         EmbeddingClient embeddingClient = azureOpenAiClient.GetEmbeddingClient("text-embedding-ada-002");
         var embeddingOptions = new EmbeddingGenerationOptions();

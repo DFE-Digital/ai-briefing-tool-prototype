@@ -13,7 +13,7 @@ public interface IMcpClientFactory
     ChatTool ConvertToChatTool(McpClientTool mcpTool);
     Task<string?> GetPromptAsync(McpClient mcpClient, string promptName, string promptType);
 }
-public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tokenService, ILogger<McpClientFactory> logger, AzureSettings azureSettings) : IMcpClientFactory
+public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tokenService, ILogger<McpClientFactory> logger) : IMcpClientFactory
 {
     private async Task<HttpClient> CreateHttpClientAsync(bool IsApiKeyBasedAuthenticaation = false)
     {
@@ -21,7 +21,7 @@ public class McpClientFactory(McpClientConfig mcpClientConfig, ITokenService tok
         if (IsApiKeyBasedAuthenticaation)
         {
             httpClient.DefaultRequestHeaders.Remove("api-key");
-            httpClient.DefaultRequestHeaders.Add("api-key", azureSettings.AzureSearchKey);
+            httpClient.DefaultRequestHeaders.Add("api-key", mcpClientConfig.ApiKey);
         }
         else
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await tokenService.GetAccessTokenAsync());

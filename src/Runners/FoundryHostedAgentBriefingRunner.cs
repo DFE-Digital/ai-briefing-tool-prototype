@@ -17,7 +17,7 @@ public class FoundryHostedAgentBriefingRunner(
     ILogger<FoundryHostedAgentBriefingRunner> logger,
     IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
-    AzureSettings azureSettings,
+    AzureFoundryConfig azureFoundryConfig,
     FoundryHostedAgentConfig foundryHostedAgentConfig) : IBriefingRunner
 {
     [Experimental("AOAI001")]
@@ -25,13 +25,12 @@ public class FoundryHostedAgentBriefingRunner(
     {
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1); 
-        logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureProjectEndpoint);
 
         try
         {
             AIProjectClient projectClient = new(
-                endpoint: new Uri(azureSettings.AzureProjectEndpoint), 
-                tokenProvider: new DefaultAzureCredential());
+                endpoint: new Uri(azureFoundryConfig.ProjectEndpoint), 
+                tokenProvider: new InteractiveBrowserCredential());
 
             AgentReference agentReference = new(
                 name: foundryHostedAgentConfig.Name,
@@ -129,9 +128,9 @@ public class FoundryHostedAgentBriefingRunner(
         var sb = new StringBuilder();
 
         foreach (var item in response.OutputItems)
-        { 
+        {
             // Text output from assistant message
-            /*if (item is MessageResponseItem message && message.Role == MessageRole.Assistant)
+            if (item is MessageResponseItem message && message.Role == MessageRole.Assistant)
             {
                 foreach (var content in message.Content)
                 {
@@ -141,7 +140,7 @@ public class FoundryHostedAgentBriefingRunner(
                         sb.Append(part.Text);
                     }
                 }
-            }*/
+            }
         }
 
         return sb.Length > 0 ? sb.ToString() : null;

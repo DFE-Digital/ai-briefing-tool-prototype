@@ -19,7 +19,7 @@ namespace BriefingTool.Runners;
 public class DatabricksQueryBriefingRunner(ILogger<DatabricksQueryBriefingRunner> logger,
     IPromptRetrieverService promptRetrieverService,
     IConcernsInformationRetriever concernsInformationRetriever,
-    AzureSettings azureSettings,
+    FauAPIConfig fauAPIConfig,
     IAzureOpenAIService azureOpenAIService,
     IPromptBuilder promptBuilder,
     IMcpClientFactory mcpClientFactory) : IDatabricksQueryBriefingRunner
@@ -31,9 +31,9 @@ public class DatabricksQueryBriefingRunner(ILogger<DatabricksQueryBriefingRunner
         {
             return new AIResult("", "Enter a prompt", -1);
         }
-        logger.LogInformation("AI endpoint: {Endpoint}", azureSettings.AzureOpenaiEndpoint);
+        logger.LogInformation("OpenAI endpoint: {Endpoint}", fauAPIConfig.OpenAiEndpoint);
         
-        var chatClient = azureOpenAIService.GetChatClient(azureSettings.AzureOpenaiKey, azureSettings.AzureOpenaiEndpoint, azureSettings.AzureOpenaiDeployment);
+        var chatClient = azureOpenAIService.GetChatClient(fauAPIConfig.ApiKey, fauAPIConfig.OpenAiEndpoint, fauAPIConfig.DeploymentModel);
         await using var mcpClient = await mcpClientFactory.CreateClientAsync();
         var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "GetSystemPrompt", "BriefingTool");
         promptBuilder.AddSystemMessage(systemMessage!);

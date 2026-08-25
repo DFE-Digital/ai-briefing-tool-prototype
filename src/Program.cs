@@ -30,11 +30,12 @@ builder.Services.AddKeyedScoped<IBriefingRunner, McpBriefingRunner>(RunnerServic
 builder.Services.AddScoped<IDatabricksQueryBriefingRunner, DatabricksQueryBriefingRunner>();
 builder.Services.AddKeyedScoped<IBriefingRunner, AgentBriefingRunner>(RunnerServiceType.Agent);
 builder.Services.AddKeyedScoped<IBriefingRunner, FoundryHostedAgentBriefingRunner>(RunnerServiceType.FoundryHostedAgent);
-builder.Services.AddScoped<IOpenAIAgentBriefingRunner, OpenAIAgentBriefingRunner>();
+builder.Services.AddKeyedScoped<IBriefingRunner, ClaudeFoundryBriefingRunner>(RunnerServiceType.ClaudeFoundry);
 builder.Services.AddKeyedScoped<IBriefingRunner, SingleSourceBriefingRunner>(RunnerServiceType.SingleDataSource);
 builder.Services.AddScoped<IPromptBuilder, PromptBuilder>();
 builder.Services.AddScoped<IAzureOpenAIService, AzureOpenAIService>();
 builder.Services.AddScoped<IMcpClientFactory, McpClientFactory>();
+builder.Services.AddScoped<IClaudeClientFactory, ClaudeClientFactory>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPromptFileReader, PromptFileReader>(); 
 builder.Services.AddScoped<IPromptRetrieverService, PromptRetrieverService>();
@@ -44,9 +45,12 @@ builder.Services.AddOptions<AuthenticationConfig>();
 var apiKeysConfiguration = builder.Configuration.GetSection("AuthenticationConfig");
 builder.Services.Configure<AuthenticationConfig>(apiKeysConfiguration);
 
-var azureSettings = builder.Configuration.GetSection("AzureSettings").Get<AzureSettings>()
-    ?? throw new InvalidOperationException("AzureSettings section is missing!");
-builder.Services.AddSingleton(azureSettings);
+var azureFoundry = builder.Configuration.GetSection("AzureFoundry").Get<AzureFoundryConfig>()
+    ?? throw new InvalidOperationException("AzureFoundry section is missing!");
+builder.Services.AddSingleton(azureFoundry);
+var fauAPI = builder.Configuration.GetSection("FauAPI").Get<FauAPIConfig>()
+    ?? throw new InvalidOperationException("FauAPI section is missing!");
+builder.Services.AddSingleton(fauAPI);
 var authConfig = builder.Configuration.GetSection("AuthenticationConfig").Get<AuthenticationConfig>()
     ?? throw new InvalidOperationException("AuthenticationConfig section is missing!");
 builder.Services.AddSingleton(authConfig);
@@ -64,6 +68,14 @@ builder.Services.AddSingleton(foundryHostedAgentConfig);
 var promptFiles = builder.Configuration.GetSection("PromptFiles").Get<PromptConfig>()
             ?? throw new InvalidOperationException("Prompt files section is missing!"); 
 builder.Services.AddSingleton(promptFiles);
+
+var claudeFoundryConfig = builder.Configuration.GetSection("ClaudeFoundry").Get<ClaudeFoundryConfig>()
+    ?? throw new InvalidOperationException("Claude Foundry section is missing!");
+builder.Services.AddSingleton(claudeFoundryConfig);
+
+var azureSearchConfig = builder.Configuration.GetSection("AzureSearch").Get<AzureSearchConfig>()
+    ?? throw new InvalidOperationException("Azure Search section is missing!");
+builder.Services.AddSingleton(azureSearchConfig);
 
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
