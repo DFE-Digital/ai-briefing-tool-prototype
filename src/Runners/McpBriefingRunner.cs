@@ -21,7 +21,7 @@ public class McpBriefingRunner(ILogger<McpBriefingRunner> logger,
     IConcernsInformationRetriever concernsInformationRetriever,
     FauAPIConfig fauAPIConfig,
     IAzureOpenAIService azureOpenAIService,
-    IPromptBuilder promptBuilder,
+    IPromptBuilder promptBuilder, 
     IMcpClientFactory mcpClientFactory) : IBriefingRunner
 {
     [Experimental("AOAI001")]
@@ -31,27 +31,15 @@ public class McpBriefingRunner(ILogger<McpBriefingRunner> logger,
         {
             return new AIResult("", "Enter an academy name", -1);
         }
-        logger.LogInformation("OpenAI endpoint: {Endpoint}", fauAPIConfig.OpenAiEndpoint);
         
-         var chatClient = azureOpenAIService.GetChatClient(fauAPIConfig.ApiKey, fauAPIConfig.OpenAiEndpoint, fauAPIConfig.DeploymentModel);
-        await using var mcpClient = await mcpClientFactory.CreateClientAsync();
-        var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "GetSystemPrompt", "BriefingTool");
+        var chatClient = azureOpenAIService.GetChatClient(fauAPIConfig.ApiKey, fauAPIConfig.OpenAiEndpoint, fauAPIConfig.DeploymentModel);
+        await using var mcpClient = await mcpClientFactory.CreateClientAsync(); 
+        var systemMessage = await mcpClientFactory.GetPromptAsync(mcpClient, "get_system_prompt", "McpGovernance");
+        promptBuilder.AddSystemMessage(promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool)); 
         promptBuilder.AddSystemMessage(systemMessage!);
 
-        var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions(); 
-         
-        void SetAISearchDataSourceForOfsted(BriefingParameters briefing)
-        { 
-            if (briefing.Ofsted)
-            {
-                promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted)); 
-            }
-            if (briefing.OfstedSummary)
-            {
-                promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary));
-            } 
-        }
-        SetAISearchDataSourceForOfsted(briefing);
+        var chatCompletionOptions = azureOpenAIService.CreateChatCompletionOptions();  
+        SetOfstedPromptsAsync(briefing);
         SetConcernsPrompts(briefing);
         SetsBriefingResponseTemplate(briefing);
 
@@ -60,6 +48,17 @@ public class McpBriefingRunner(ILogger<McpBriefingRunner> logger,
         SetsAdditionalPrompt(briefing);
 
         return await CreateCompleteChatResponseAsync(chatClient, mcpClient, chatCompletionOptions);
+    }
+    private void SetOfstedPromptsAsync(BriefingParameters briefing)
+    {
+        if (briefing.Ofsted)
+        {
+            promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.Ofsted));
+        }
+        if (briefing.OfstedSummary)
+        {
+            promptBuilder.AddUserMessage(promptRetrieverService.GetUserPrompt(UserPromptType.OfstedSummary));
+        }
     }
 
     /// <summary>

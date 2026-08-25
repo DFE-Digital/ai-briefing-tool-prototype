@@ -1,7 +1,4 @@
 ﻿using Azure.AI.OpenAI;
-using Azure.AI.Projects;
-using Azure.Core;
-using Microsoft.Agents.AI;
 using OpenAI;
 using OpenAI.Assistants;
 using OpenAI.Chat;
@@ -33,8 +30,6 @@ public interface IAzureOpenAIService
     /// <param name="azureOpenaiEndpoint">An endpoint of Azure Open AI.</param>
     /// <returns></returns>
     AzureOpenAIClient InitialiseAzureOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint);
-
-    OpenAIClient InitialiseOpenAIClient(string azureOpenaiKey, string azureOpenaiEndpoint);
 
     [Experimental("AOAI002")]
     Task<Assistant> CreateAgentAssistantAsync(OpenAIClient openAIClient, string model, string instruction);

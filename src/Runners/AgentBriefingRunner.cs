@@ -32,13 +32,11 @@ public class AgentBriefingRunner(ILogger<AgentBriefingRunner> logger, IPromptRet
         if (string.IsNullOrEmpty(briefing.AcademyName))
             return new AIResult("", "Enter an academy name", -1);
 
-        logger.LogInformation("OpenAI endpoint: {Endpoint}", azureFoundryConfig.OpenAiEndpoint);
-
         string instruction = promptRetrieverService.GetSystemPrompt(SystemPromptType.BriefingTool);
 
         AIAgent agent = new AIProjectClient(
                 new Uri(azureFoundryConfig.ProjectEndpoint),
-                new DefaultAzureCredential())
+                new InteractiveBrowserCredential())
             .AsAIAgent(
                 model: azureFoundryConfig.DeploymentModel,
                 name: "BriefingAgent",
